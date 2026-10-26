@@ -568,6 +568,7 @@ html.zooming {
 /* Names sit straight on the map, with no boxes */
 .mapLabel,
 .geoLabel {
+  opacity: 0;
   position: absolute;
   transform: translate(-50%, -50%);
   display: flex;

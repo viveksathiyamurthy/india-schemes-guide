@@ -27,6 +27,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${nunito.variable} ${notoTamil.variable} ${notoMalayalam.variable} ${notoKannada.variable} ${notoTelugu.variable}`}>
+      <head>
+        {/* On the welcome screen the page starts as black space, so nothing flashes before the globe is ready. */}
+        <script dangerouslySetInnerHTML={{ __html: "try{if(location.pathname==='/')document.documentElement.classList.add('space')}catch(e){}" }} />
+      </head>
       <body>
         <LangProvider>
           <CurtainProvider>

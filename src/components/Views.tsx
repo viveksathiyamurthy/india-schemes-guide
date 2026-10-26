@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState, type CSSProperties, type MouseEvent } from 'react';
+import { useEffect, useLayoutEffect, useState, type CSSProperties, type MouseEvent } from 'react';
 import { useLang } from '@/lib/lang';
 import { ui } from '@/lib/ui';
 import { formatDate } from '@/lib/text';
@@ -21,15 +21,16 @@ export function WelcomeView() {
   const { t } = useLang();
   // Start with an empty frame, then show the 3D planet, or the flat map on devices that cannot draw 3D.
   const [view, setView] = useState<'wait' | 'planet' | 'flat'>('wait');
+  const [calm, setCalm] = useState(false);
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
-    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setView(!calm && webglWorks() ? 'planet' : 'flat');
+    setCalm(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    setView(webglWorks() ? 'planet' : 'flat');
   }, []);
   // On the 3D globe the whole screen is space. The strip and search only appear once the zoom has finished.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement;
-    if (view === 'planet') root.classList.add('space');
+    if (view === 'planet' || view === 'wait') root.classList.add('space');
     else root.classList.remove('space', 'spaceReady');
     return () => root.classList.remove('space', 'spaceReady');
   }, [view]);
@@ -41,7 +42,7 @@ export function WelcomeView() {
         <SearchBar />
         <h2 className="mapTitle">{t(ui.chooseState)}</h2>
       </div>
-      {view === 'planet' ? <PlanetMap onFail={() => setView('flat')} onReady={() => document.documentElement.classList.add('spaceReady')} /> : view === 'flat' ? <StateMap /> : <div className="mapStage"><div className="planetBox" /></div>}
+      {view === 'planet' ? <PlanetMap calm={calm} onFail={() => setView('flat')} onReady={() => document.documentElement.classList.add('spaceReady')} /> : view === 'flat' ? <StateMap /> : <div className="planetStage"><div className="planetBox" /></div>}
     </div>
   );
 }

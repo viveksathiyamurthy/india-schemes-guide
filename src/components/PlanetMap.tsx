@@ -110,7 +110,7 @@ let introPlayed = false;
  * Screen 1 as a painted globe, in the style of a soft storybook. It starts in space, glides
  * down and settles over the five southern states. Drag to look around, tap a state to fly in.
  */
-export function PlanetMap({ onFail, onReady }: { onFail: () => void; onReady?: () => void }) {
+export function PlanetMap({ onFail, onReady, calm = false }: { onFail: () => void; onReady?: () => void; calm?: boolean }) {
   const { t, tr } = useLang();
   const router = useRouter();
   const [picked, setPicked] = useState<string | null>(null);
@@ -124,6 +124,8 @@ export function PlanetMap({ onFail, onReady }: { onFail: () => void; onReady?: (
   soonRef.current = setSoon;
   const failRef = useRef(onFail);
   failRef.current = onFail;
+  const calmRef = useRef(calm);
+  calmRef.current = calm;
   const readyRef = useRef(onReady);
   readyRef.current = onReady;
   const starsRef = useRef<HTMLCanvasElement>(null);
@@ -261,13 +263,15 @@ export function PlanetMap({ onFail, onReady }: { onFail: () => void; onReady?: (
     let thY = Math.tan(FOV / 2);
     let raf = 0;
     let visible = true;
-    const t0 = performance.now();
-    if (!introPlayed) {
-      intro = { start: t0, dur: 7500, q0: faceTo(-35, 12, 0.35), d0: SPACE };
+    if (calmRef.current) {
+      // reduced motion: no flying, just open on the finished view
+      intro = { start: -1, dur: 1, q0: homeQ, d0: HOME_DIST };
+    } else if (!introPlayed) {
+      intro = { start: -1, dur: 7500, q0: faceTo(-35, 12, 0.35), d0: SPACE };
       q = intro.q0;
       dist = SPACE;
     } else {
-      intro = { start: t0, dur: 1100, q0: faceTo(HOME.lon - 6, HOME.lat + 3, 0.2), d0: 1.9 };
+      intro = { start: -1, dur: 1100, q0: faceTo(HOME.lon - 6, HOME.lat + 3, 0.2), d0: 1.9 };
       q = intro.q0;
       dist = 1.9;
     }
@@ -431,6 +435,8 @@ export function PlanetMap({ onFail, onReady }: { onFail: () => void; onReady?: (
           return;
         }
       } else if (intro) {
+        // the clock starts with the first picture on screen, not while the textures are still being painted
+        if (intro.start < 0) intro.start = now;
         const p = clamp01((now - intro.start) / intro.dur);
         q = qSlerp(intro.q0, homeQ, ease(clamp01(p / 0.92)));
         dist = intro.d0 + (HOME_DIST - intro.d0) * ease(p);
