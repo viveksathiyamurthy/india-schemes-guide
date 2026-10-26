@@ -76,7 +76,7 @@ export function PersonaView({ state }: { state: StateInfo }) {
             <a
               key={p.slug}
               href={`/${state.slug}/${p.slug}`}
-              className={`who${walk?.kind === p.character ? ' gone' : ''}`}
+              className={`who k-${p.character}${walk?.kind === p.character ? ' gone' : ''}`}
               style={{ '--i': i } as CSSProperties}
               onClick={(e) => pick(e, p)}
             >

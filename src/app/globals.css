@@ -741,6 +741,7 @@ html.zooming {
 }
 
 .who .char {
+  z-index: 1;
   position: absolute;
   left: 6px;
   bottom: 6px;
@@ -748,6 +749,39 @@ html.zooming {
   height: 154px;
   pointer-events: none;
 }
+
+.who .char::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: 30%;
+  bottom: -6px;
+  z-index: -1;
+  border-radius: 22px 22px 18px 18px;
+  background: var(--bgc, #2f7fd8);
+  box-shadow: inset 0 -26px 0 rgba(255, 255, 255, 0.16);
+}
+
+.who .char::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 34%;
+  width: 40px;
+  height: 14px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 14px -6px 0 -1px #fff, 30px 2px 0 -2px #fff;
+  z-index: -1;
+  opacity: 0.9;
+}
+
+.who.k-msme { --bgc: #2f7fd8; }
+.who.k-farmer { --bgc: #14a39a; }
+.who.k-home { --bgc: #e8892c; }
+.who.k-student { --bgc: #7a56d6; }
+.who.k-woman { --bgc: #d6417a; }
 
 .who.gone .char {
   visibility: hidden;
