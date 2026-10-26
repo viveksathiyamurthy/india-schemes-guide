@@ -1,5 +1,6 @@
 import { createRoot } from 'react-dom/client';
 import { LangProvider } from '@/lib/lang';
+import { CurtainProvider } from '@/lib/curtain';
 import { Disclaimer, Footer, Header } from '@/components/Chrome';
 import { DetailView, ListView, NotFoundView, PersonaView, SearchView, WelcomeView } from '@/components/Views';
 import { findPersona, findState } from '@/data/config';
@@ -32,6 +33,7 @@ function Route() {
 
 createRoot(document.getElementById('root')!).render(
   <LangProvider>
+    <CurtainProvider>
     <div className="app">
       <Header />
       <Disclaimer />
@@ -40,5 +42,6 @@ createRoot(document.getElementById('root')!).render(
       </main>
       <Footer />
     </div>
+    </CurtainProvider>
   </LangProvider>,
 );

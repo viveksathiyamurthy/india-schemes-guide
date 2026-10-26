@@ -1,73 +1,100 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState, type CSSProperties, type MouseEvent } from 'react';
 import { useLang } from '@/lib/lang';
 import { ui } from '@/lib/ui';
 import { formatDate } from '@/lib/text';
 import { byPersona, searchSchemes } from '@/lib/search';
 import { personas, states, type Persona, type StateInfo } from '@/data/config';
 import type { Scheme } from '@/data/types';
+import { useCurtain } from '@/lib/curtain';
+import { mapShapes, mapViewBox } from '@/data/southMap';
+import { Character } from './Characters';
+import { StateMap } from './StateMap';
+import { WalkOut, type WalkStart } from './WalkOut';
 import { BackButton, BackLink, LevelTag, PlaceTag, RichText, SchemeCard, SearchBar } from './Parts';
 
-/* Screen 1: welcome, search and choose a state */
+/* Screen 1: welcome, search and choose a state on the map */
 export function WelcomeView() {
-  const { t, tr } = useLang();
+  const { t } = useLang();
+  useEffect(() => {
+    document.documentElement.classList.remove('zooming');
+  }, []);
   return (
-    <div className="page">
-      <section className="hero">
+    <div className="page welcome">
+      <div className="intro">
         <h1>{t(ui.welcomeTitle)}</h1>
-        <p>{t(ui.welcomeSub)}</p>
-        <svg className="fold" width="120" height="110" viewBox="0 0 120 110" aria-hidden="true">
-          <polygon points="10,100 118,20 90,108" fill="#FFFBFA" opacity="0.55" />
-          <polygon points="10,100 90,108 52,72" fill="#2a2230" opacity="0.85" />
-          <polygon points="118,20 52,72 90,108" fill="#FFFBFA" opacity="0.3" />
-        </svg>
-      </section>
-      <SearchBar />
-      <h2>{t(ui.chooseState)}</h2>
-      <div className="stack">
-        {states.map((s) =>
-          s.available ? (
-            <Link key={s.slug} href={`/${s.slug}`} className="st on">
-              {tr(s.name, s.nameTa)} <span className="pill a">{t(ui.available)}</span>
-            </Link>
-          ) : (
-            <div key={s.slug} className="st off">
-              {tr(s.name, s.nameTa)} <span className="pill c">{t(ui.comingSoon)}</span>
-            </div>
-          ),
-        )}
+        <p className="sub">{t(ui.welcomeSub)}</p>
+        <SearchBar />
+        <h2 className="mapTitle">{t(ui.chooseState)}</h2>
       </div>
+      <StateMap />
     </div>
   );
 }
 
-/* Screen 2: choose a persona */
+/* Screen 2: choose a persona. Each choice has a character who walks off when chosen. */
 export function PersonaView({ state }: { state: StateInfo }) {
   const { t, tr } = useLang();
+  const [walk, setWalk] = useState<WalkStart | null>(null);
+  useEffect(() => {
+    document.documentElement.classList.remove('zooming');
+  }, []);
+
+  function pick(e: MouseEvent<HTMLAnchorElement>, p: Persona) {
+    if (walk) {
+      e.preventDefault();
+      return;
+    }
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const spot = e.currentTarget.querySelector('.char');
+    if (!spot) return;
+    e.preventDefault();
+    const r = spot.getBoundingClientRect();
+    document.documentElement.classList.add('zooming');
+    setWalk({ kind: p.character, href: `/${state.slug}/${p.slug}`, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
+  }
+
+  const path = mapShapes[state.slug];
+  const style = { '--st': state.color, '--on': state.onColor } as CSSProperties;
   return (
-    <div className="page">
-      <BackLink href="/">{t(ui.changeState)}</BackLink>
-      <span className="chip">{tr(state.name, state.nameTa)}</span>
-      <h1>{t(ui.whoAreYou)}</h1>
-      <SearchBar stateSlug={state.slug} />
-      <div className="stack">
-        {personas.map((p) => (
-          <Link key={p.slug} href={`/${state.slug}/${p.slug}`} className="who">
-            <span className="dot" aria-hidden="true">
-              {p.letter}
-            </span>
-            <span>
-              <b>{tr(p.labelEn, p.labelTa)}</b>
-              <small>{tr(p.hintEn, p.hintTa)}</small>
-            </span>
-            <span className="go2" aria-hidden="true">
-              &rsaquo;
-            </span>
-          </Link>
-        ))}
+    <div className={`persona${walk ? ' leaving' : ''}`} style={style}>
+      <div className="backdrop" aria-hidden="true">
+        <svg viewBox={`0 0 ${mapViewBox.width} ${mapViewBox.height}`} preserveAspectRatio="xMidYMid slice">
+          <path d={path.d} fill="#fff" opacity="0.13" />
+        </svg>
       </div>
+      <div className="page">
+        <BackLink href="/">{t(ui.changeState)}</BackLink>
+        <span className="chip">{tr(state.name, state.nameTa)}</span>
+        <h1>{t(ui.whoAreYou)}</h1>
+        <SearchBar stateSlug={state.slug} />
+        <div className="whoList">
+          {personas.map((p, i) => (
+            <a
+              key={p.slug}
+              href={`/${state.slug}/${p.slug}`}
+              className={`who${walk?.kind === p.character ? ' gone' : ''}`}
+              style={{ '--i': i } as CSSProperties}
+              onClick={(e) => pick(e, p)}
+            >
+              <span className="char">
+                <Character kind={p.character} />
+              </span>
+              <span className="whoText">
+                <b>{tr(p.labelEn, p.labelTa)}</b>
+                <small>{tr(p.hintEn, p.hintTa)}</small>
+              </span>
+              <span className="go2" aria-hidden="true">
+                &rsaquo;
+              </span>
+            </a>
+          ))}
+        </div>
+      </div>
+      {walk ? <WalkOut start={walk} /> : null}
     </div>
   );
 }
@@ -81,7 +108,12 @@ function countText(n: number, t: (x: { en: string; ta: string }) => string) {
 /* Screen 3: list for a chosen state and persona */
 export function ListView({ state, persona }: { state: StateInfo; persona: Persona }) {
   const { t, tr } = useLang();
+  const { reveal } = useCurtain();
   const [filter, setFilter] = useState<Filter>('all');
+  useEffect(() => {
+    document.documentElement.classList.remove('zooming');
+    reveal();
+  }, [reveal]);
   const all = byPersona(state.name, persona.key);
   const shown = all.filter((s) =>
     filter === 'all' ? true : filter === 'state' ? s.level === 'State Government' : s.level === 'Union/Central Government',

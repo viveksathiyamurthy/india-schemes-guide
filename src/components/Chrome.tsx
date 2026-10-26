@@ -7,7 +7,7 @@ import { ui } from '@/lib/ui';
 export function BrandMark() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-      <polygon points="2,14 26,3 18,25" fill="#FF9398" />
+      <polygon points="2,14 26,3 18,25" fill="#E4572E" />
       <polygon points="2,14 18,25 13,16" fill="#2a2230" />
     </svg>
   );

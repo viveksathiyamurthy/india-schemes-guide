@@ -14,7 +14,10 @@ await build({
   jsx: 'automatic',
   define: { 'process.env.NODE_ENV': '"production"' },
   nodePaths: ['/opt/npm-tools/node_modules'],
-  alias: { 'next/link': resolve(root, 'tests/harness/link.tsx') },
+  alias: {
+    'next/link': resolve(root, 'tests/harness/link.tsx'),
+    'next/navigation': resolve(root, 'tests/harness/navigation.tsx'),
+  },
   tsconfig: resolve(root, 'tsconfig.json'),
   logLevel: 'warning',
 });
