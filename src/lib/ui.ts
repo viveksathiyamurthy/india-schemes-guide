@@ -10,8 +10,8 @@ export interface Text {
 export const ui = {
   brand: { en: 'India Schemes Guide', ta: 'இந்தியா திட்ட வழிகாட்டி' },
   disclaimer: {
-    en: 'Information only. Please verify on the official government website before you apply. This site takes no responsibility.',
-    ta: 'தகவல் மட்டுமே. விண்ணப்பிக்கும் முன் அதிகாரப்பூர்வ அரசு இணையதளத்தில் சரிபார்க்கவும். இந்தத் தளம் எந்தப் பொறுப்பையும் ஏற்காது.',
+    en: 'This website only publishes information and takes no responsibility for it. Before you apply, please check the official government website for the original instructions.',
+    ta: 'இந்தத் தளம் தகவல்களை மட்டுமே வெளியிடுகிறது; அவற்றுக்கு எந்தப் பொறுப்பையும் ஏற்காது. விண்ணப்பிக்கும் முன், அசல் வழிமுறைகளுக்கு அதிகாரப்பூர்வ அரசு இணையதளத்தைப் பார்க்கவும்.',
   },
   footer: {
     en: 'An independent information site. This is not a government website.',
@@ -28,7 +28,7 @@ export const ui = {
   searchButton: { en: 'Search', ta: 'தேடு' },
   mapPrompt: { en: 'Tap your state on the map', ta: 'வரைபடத்தில் உங்கள் மாநிலத்தைத் தொடுங்கள்' },
   mapAria: { en: 'Map of South India. Choose your state.', ta: 'தென்னிந்திய வரைபடம். உங்கள் மாநிலத்தைத் தேர்ந்தெடுக்கவும்.' },
-  planetHint: { en: 'Drag to look around. Tap a state.', ta: 'இழுத்துப் பாருங்கள். மாநிலத்தைத் தொடுங்கள்.' },
+  planetHint: { en: 'Tap a state on the map', ta: 'வரைபடத்தில் உங்கள் மாநிலத்தைத் தொடுங்கள்' },
   openNow: { en: 'Open now', ta: 'இப்போது கிடைக்கிறது' },
   soonNote: { en: '{state} is coming soon. Tamil Nadu is open now.', ta: '{state} விரைவில் வரும். தமிழ்நாடு இப்போது கிடைக்கிறது.' },
   legendOpen: { en: 'Open now', ta: 'இப்போது கிடைக்கிறது' },

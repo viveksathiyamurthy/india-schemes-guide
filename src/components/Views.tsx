@@ -12,7 +12,7 @@ import { useCurtain } from '@/lib/curtain';
 import { mapShapes, mapViewBox } from '@/data/southMap';
 import { Character } from './Characters';
 import { StateMap } from './StateMap';
-import { PlanetMap, webglWorks } from './PlanetMap';
+import { EarthIntro, webglWorks } from './EarthIntro';
 import { WalkOut, type WalkStart } from './WalkOut';
 import { BackButton, BackLink, LevelTag, PlaceTag, RichText, SchemeCard, SearchBar } from './Parts';
 
@@ -42,7 +42,7 @@ export function WelcomeView() {
         <SearchBar />
         <h2 className="mapTitle">{t(ui.chooseState)}</h2>
       </div>
-      {view === 'planet' ? <PlanetMap calm={calm} onFail={() => setView('flat')} onReady={() => document.documentElement.classList.add('spaceReady')} /> : view === 'flat' ? <StateMap /> : <div className="planetStage"><div className="planetBox" /></div>}
+      {view === 'planet' ? <EarthIntro calm={calm} onFail={() => setView('flat')} onReady={() => document.documentElement.classList.add('spaceReady')} /> : view === 'flat' ? <StateMap /> : <div className="planetStage"><div className="planetBox" /></div>}
     </div>
   );
 }
