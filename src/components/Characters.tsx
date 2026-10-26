@@ -79,10 +79,12 @@ const Neck = ({ skin }: { skin: string }) => (
 function Legs({ leg, sock, shoe, barefoot, skin }: { leg: string; sock?: string; shoe: string; barefoot?: boolean; skin: string }) {
   return (
     <>
-      {[
-        ['leg-l', 52],
-        ['leg-r', 68],
-      ].map(([cls, x]) => (
+      {(
+        [
+          ['leg-l', 52],
+          ['leg-r', 68],
+        ] as [string, number][]
+      ).map(([cls, x]) => (
         <g key={cls} className={`ch-${cls}`} style={{ transformOrigin: `${x}px 138px` }}>
           <Limb d={`M${x} 140 L${x} 176`} w={13} color={leg} />
           {sock ? <Limb d={`M${x} 168 L${x} 180`} w={11} color={sock} /> : null}
