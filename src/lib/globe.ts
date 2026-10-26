@@ -158,14 +158,14 @@ export function paintGlobe(canvas: HTMLCanvasElement) {
   ctx.save();
   trace(ctx, rings, proj);
   ctx.clip();
-  blotches(ctx, w, h, 500, rand, w * 0.004, w * 0.016, 'rgba(190,170,110,0.9)', 'rgba(35,85,45,0.9)', 0.3);
+  blotches(ctx, w, h, 500, rand, w * 0.004, w * 0.016, 'rgba(190,170,110,0.9)', 'rgba(70,90,70,0.9)', 0.14);
   ctx.restore();
   ctx.strokeStyle = PASTEL.foam;
   ctx.lineWidth = Math.max(1, w / 1400);
   trace(ctx, rings, proj);
   ctx.stroke();
   // the five states, in their soft colours
-  ctx.globalAlpha = 0.74;
+  ctx.globalAlpha = 0.92;
   fiveSlugs.forEach((slug, i) => {
     ctx.fillStyle = statePastels[i];
     trace(ctx, indiaStates[slug], proj);
@@ -204,7 +204,7 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   ctx.save();
   trace(ctx, rings, proj);
   ctx.clip();
-  blotches(ctx, w, h, 1100, rand, ppd * 0.12, ppd * 0.5, 'rgba(205,180,120,0.9)', 'rgba(60,100,50,0.9)', 0.3);
+  blotches(ctx, w, h, 800, rand, ppd * 0.2, ppd * 0.7, 'rgba(205,185,140,0.9)', 'rgba(90,100,80,0.9)', 0.12);
   ctx.restore();
   ctx.strokeStyle = PASTEL.foam;
   ctx.lineWidth = ppd * 0.05;
@@ -214,32 +214,18 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   fiveSlugs.forEach((slug, i) => {
     const rs = indiaStates[slug];
     // base satellite colour first, then a light wash of the state's own colour
-    ctx.fillStyle = '#6F8A4C';
+    ctx.fillStyle = '#8A8F95';
     trace(ctx, rs, proj);
     ctx.fill();
     ctx.save();
     trace(ctx, rs, proj);
     ctx.clip();
-    blotches(ctx, w, h, 900, rand, ppd * 0.1, ppd * 0.45, 'rgba(190,150,95,0.95)', 'rgba(40,95,45,0.9)', 0.38);
-    ctx.globalAlpha = 0.74;
+    // flat palette colour with only a faint soft light/shade, no green spots
+    ctx.globalAlpha = 0.92;
     ctx.fillStyle = statePastels[i];
     ctx.fillRect(0, 0, w, h);
     ctx.globalAlpha = 1;
-    // small painted trees and hills
-    const [x0, y0, x1, y1] = boxes[i];
-    for (let k = 0; k < 1400; k++) {
-      const lon = x0 + rand() * (x1 - x0);
-      const lat = y0 + rand() * (y1 - y0);
-      if (!inside(rs, lon, lat)) continue;
-      const [px, py] = proj(lon, lat);
-      const r = ppd * (0.035 + rand() * 0.03);
-      ctx.fillStyle = 'rgba(30,85,45,0.28)';
-      for (let c = 0; c < 3; c++) {
-        ctx.beginPath();
-        ctx.arc(px + (c - 1) * r * 0.9, py + (c % 2) * r * 0.5, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
+    blotches(ctx, w, h, 500, rand, ppd * 0.3, ppd * 0.9, 'rgba(255,255,255,0.9)', 'rgba(40,50,70,0.9)', 0.07);
     ctx.restore();
   });
   // soft borders between the states, and a light coast line
