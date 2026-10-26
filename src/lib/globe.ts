@@ -8,7 +8,7 @@ import { states } from '@/data/config';
 import { norm, type V3 } from './quat';
 
 /** The part of the world that gets a sharper texture, because we zoom into it. */
-export const PATCH = { lon0: 64, lon1: 92, lat0: 0, lat1: 28 };
+export const PATCH = { lon0: 56, lon1: 100, lat0: -6, lat1: 38 };
 export const fiveSlugs = states.map((s) => s.slug);
 /** Where the five states are on the globe, [lon, lat]. */
 export const centers = fiveSlugs.map((slug) => stateCenters[slug]);
@@ -96,13 +96,13 @@ const PASTEL = {
 };
 /** Land colour by latitude (0 = north pole, 1 = south pole), shared by the globe and the sharper patch so they blend. */
 const LAND_STOPS: [number, string][] = [
-  [0, '#F4F6F8'],
-  [0.15, '#ECE9DD'],
-  [0.36, '#EFEBE0'],
-  [0.5, '#E9E4D2'],
-  [0.64, '#EFEBE0'],
-  [0.85, '#ECE9DD'],
-  [1, '#F4F6F8'],
+  [0, '#E9EEF2'],
+  [0.15, '#D2CDB9'],
+  [0.36, '#D8D0B8'],
+  [0.5, '#CDC3A6'],
+  [0.64, '#D8D0B8'],
+  [0.85, '#D2CDB9'],
+  [1, '#E9EEF2'],
 ];
 /** Soft colours for the five states, the same ones used on the next screen. */
 export const statePastels = states.map((s) => s.color);
@@ -380,7 +380,7 @@ function softenOutside(canvas: HTMLCanvasElement, proj: Proj) {
     ctx.drawImage(tmp, 0, 0);
   }
   // 4) the further from the states, the darker, so the eye stays on them
-  ctx.drawImage(maskOf((deg) => 0.16 * smooth(0.3, 4.5, deg), [4, 10, 28]), 0, 0, w, h);
+  ctx.drawImage(maskOf((deg) => 0, [4, 10, 28]), 0, 0, w, h);
 }
 
 /** One flat colour per state, so the screen can tell which state a pixel is in. */
@@ -398,34 +398,87 @@ export function paintIds(canvas: HTMLCanvasElement) {
   });
 }
 
-/** Soft white clouds. A gap is left over India so the states stay clear. */
+/**
+ * Clouds that look like clouds: layered noise gives lumpy, fluffy shapes with bright tops and
+ * grey-blue undersides. A gap is left over India so the states stay clear.
+ */
 export function paintClouds(canvas: HTMLCanvasElement) {
-  const w = canvas.width;
-  const h = canvas.height;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-  const rand = rng(9);
-  ctx.clearRect(0, 0, w, h);
-  for (let i = 0; i < 50; i++) {
-    const lon = -180 + rand() * 360;
-    const lat = -60 + rand() * 120;
-    if (lon > 52 && lon < 104 && lat > -12 && lat < 38) continue;
-    const x = ((lon + 180) / 360) * w;
-    const y = ((90 - lat) / 180) * h;
-    const size = w * (0.012 + rand() * 0.02);
-    for (let c = 0; c < 5; c++) {
-      const cx = x + (c - 2) * size * 0.7;
-      const cy = y + (c % 2 ? -1 : 1) * size * 0.18;
-      const r = size * (0.7 + rand() * 0.5);
-      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g.addColorStop(0, 'rgba(255,255,255,0.8)');
-      g.addColorStop(0.6, 'rgba(255,255,255,0.5)');
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, r * 1.25, r * 0.8, 0, 0, Math.PI * 2);
-      ctx.fill();
+  const W = 1024;
+  const H = 512;
+  const hash = (x: number, y: number) => {
+    let n = (x * 374761393 + y * 668265263) | 0;
+    n = Math.imul(n ^ (n >>> 13), 1274126177);
+    return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+  };
+  // value noise that repeats around the globe (period px cells in x)
+  const noise = (x: number, y: number, px: number) => {
+    const xi = Math.floor(x);
+    const yi = Math.floor(y);
+    const fx = x - xi;
+    const fy = y - yi;
+    const sx = fx * fx * (3 - 2 * fx);
+    const sy = fy * fy * (3 - 2 * fy);
+    const x0 = ((xi % px) + px) % px;
+    const x1 = (x0 + 1) % px;
+    const a = hash(x0, yi), b = hash(x1, yi), c = hash(x0, yi + 1), d = hash(x1, yi + 1);
+    return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+  };
+  const field = new Float32Array(W * H);
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      let amp = 0.55, sum = 0, norm = 0;
+      let fx = 12, fy = 6;
+      for (let o = 0; o < 6; o++) {
+        sum += amp * noise((x / W) * fx + o * 3.1, (y / H) * fy + o * 1.7, fx);
+        norm += amp;
+        amp *= 0.6;
+        fx *= 2;
+        fy *= 2;
+      }
+      field[y * W + x] = sum / norm;
     }
   }
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  const small = document.createElement('canvas');
+  small.width = W;
+  small.height = H;
+  const sc = small.getContext('2d', { willReadFrequently: true })!;
+  const im = sc.createImageData(W, H);
+  const smoothstep = (a: number, b: number, v: number) => {
+    const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  };
+  for (let y = 0; y < H; y++) {
+    const lat = 90 - (y / H) * 180;
+    for (let x = 0; x < W; x++) {
+      const lon = (x / W) * 360 - 180;
+      const f = field[y * W + x];
+      // keep the sky over India clear
+      const dx = Math.max(52 - lon, 0, lon - 104);
+      const dy = Math.max(-12 - lat, 0, lat - 38);
+      const away = smoothstep(0, 14, Math.hypot(dx, dy));
+      const cover = smoothstep(0.56, 0.67, f) * away;
+      const i = (y * W + x) * 4;
+      if (cover <= 0.002) {
+        im.data[i + 3] = 0;
+        continue;
+      }
+      // light comes from the upper left: a point brighter than its lower-right neighbour is lit
+      const nb = field[Math.min(H - 1, y + 2) * W + ((x + 2) % W)];
+      const lit = Math.max(-1, Math.min(1, (f - nb) * 14));
+      const body = smoothstep(0.58, 0.75, f); // thick middle is whiter and heavier
+      const shade = 0.7 + 0.28 * lit + 0.12 * body;
+      const k = Math.max(0.55, Math.min(1.05, shade));
+      im.data[i] = Math.min(255, 168 + 90 * k);
+      im.data[i + 1] = Math.min(255, 176 + 82 * k);
+      im.data[i + 2] = Math.min(255, 196 + 62 * k);
+      im.data[i + 3] = Math.round(255 * Math.min(0.92, cover * (0.5 + 0.55 * body)));
+    }
+  }
+  sc.putImageData(im, 0, 0);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
 }
 
 /* ---------- meshes: interleaved x, y, z, u, v ---------- */

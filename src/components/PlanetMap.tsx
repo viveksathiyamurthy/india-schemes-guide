@@ -67,10 +67,10 @@ void main() {
   }
   vec4 t = texture2D(uTex, vUv);
   if (uMode > 1.5) {
-    gl_FragColor = vec4(vec3(1.0) * (0.32 + 0.68 * smoothstep(0.25, 0.7, d)), t.a * 0.85 * (0.1 + 0.9 * uGlow));
+    gl_FragColor = vec4(t.rgb * (0.25 + 0.72 * smoothstep(0.2, 0.75, d)), t.a * (0.1 + 0.9 * uGlow));
     return;
   }
-  vec3 col = t.rgb * (0.3 + 0.85 * smoothstep(0.2, 0.75, d));
+  vec3 col = t.rgb * (0.3 + 0.7 * smoothstep(0.2, 0.75, d));
   float water = smoothstep(0.03, 0.16, t.b - t.r);
   vec3 hv = normalize(uLight + vec3(0.0, 0.0, 1.0));
   float spec = pow(max(dot(n, hv), 0.0), 38.0);
@@ -83,7 +83,7 @@ void main() {
     float hov = abs(id - uHoverId) < 7.0 ? uHoverT : 0.0;
     col = mix(col, vec3(1.0, 0.95, 0.7), hov * 0.28);
     float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
-    a = 1.0;
+    a = smoothstep(0.0, 0.14, e);
   }
   gl_FragColor = vec4(col, a);
 }`;
@@ -241,7 +241,8 @@ export function PlanetMap({ onFail, onReady, calm = false }: { onFail: () => voi
     };
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    // alpha accumulates as a + dst*(1-a), so a soft edge over the globe stays fully opaque
+    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     gl.clearColor(0, 0, 0, 0);
     gl.uniform3fv(U.light, new Float32Array(norm([-0.45, 0.55, 0.75])));
 
