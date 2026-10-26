@@ -722,8 +722,8 @@ html.zooming {
 
 .whoList {
   display: grid;
-  gap: 46px 14px;
-  padding-top: 44px;
+  gap: 74px 14px;
+  padding-top: 70px;
   grid-template-columns: 1fr;
 }
 
@@ -732,8 +732,8 @@ html.zooming {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 118px;
-  padding: 12px 16px 12px 108px;
+  min-height: 128px;
+  padding: 12px 16px 12px 118px;
   border-radius: 24px;
   background: #fff;
   color: var(--ink);
@@ -765,45 +765,12 @@ html.zooming {
 .who .char {
   z-index: 1;
   position: absolute;
-  left: 6px;
-  bottom: 6px;
-  width: 88px;
-  height: 154px;
+  left: 8px;
+  bottom: 8px;
+  width: 100px;
+  height: 196px;
   pointer-events: none;
 }
-
-.who .char::before {
-  content: '';
-  position: absolute;
-  left: -8px;
-  right: -8px;
-  top: 30%;
-  bottom: -6px;
-  z-index: -1;
-  border-radius: 22px 22px 18px 18px;
-  background: var(--bgc, #2f7fd8);
-  box-shadow: inset 0 -26px 0 rgba(255, 255, 255, 0.16);
-}
-
-.who .char::after {
-  content: '';
-  position: absolute;
-  left: 2px;
-  top: 34%;
-  width: 40px;
-  height: 14px;
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 14px -6px 0 -1px #fff, 30px 2px 0 -2px #fff;
-  z-index: -1;
-  opacity: 0.9;
-}
-
-.who.k-msme { --bgc: #9CC3EE; }
-.who.k-farmer { --bgc: #97D6CB; }
-.who.k-home { --bgc: #F5C48C; }
-.who.k-student { --bgc: #C3B3EA; }
-.who.k-woman { --bgc: #F1B1CA; }
 
 .who.gone .char {
   visibility: hidden;
@@ -837,97 +804,35 @@ html.zooming {
 }
 
 /* ================= Characters ================= */
-.ch {
+.ch-img {
   display: block;
   width: 100%;
   height: 100%;
-  overflow: visible;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 5px 6px rgba(29, 26, 58, 0.3));
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
-.ch-body {
-  animation: breathe 3.2s ease-in-out infinite alternate;
+.walkBob {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 100%;
 }
 
-@keyframes breathe {
-  from {
-    transform: translateY(0);
+.walkBob.stepping {
+  animation: stride 0.46s ease-in-out infinite;
+}
+
+@keyframes stride {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
   }
-  to {
-    transform: translateY(-1.6px);
+  50% {
+    transform: translateY(-6%) rotate(2deg);
   }
-}
-
-.walking .ch-body {
-  animation: bob 0.28s ease-in-out infinite alternate;
-}
-
-@keyframes bob {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(-3.5px);
-  }
-}
-
-.walking .ch-leg-l,
-.walking .ch-arm-r {
-  animation: swingA 0.56s ease-in-out infinite alternate;
-}
-
-.walking .ch-leg-r,
-.walking .ch-arm-l {
-  animation: swingB 0.56s ease-in-out infinite alternate;
-}
-
-@keyframes swingA {
-  from {
-    transform: rotate(-20deg);
-  }
-  to {
-    transform: rotate(20deg);
-  }
-}
-
-@keyframes swingB {
-  from {
-    transform: rotate(20deg);
-  }
-  to {
-    transform: rotate(-20deg);
-  }
-}
-
-.ch-garment {
-  transform-origin: 60px 110px;
-}
-
-.walking .ch-garment {
-  animation: sway 0.56s ease-in-out infinite alternate;
-}
-
-@keyframes sway {
-  from {
-    transform: rotate(-1.6deg);
-  }
-  to {
-    transform: rotate(1.6deg);
-  }
-}
-
-.ch-arm-r {
-  transition: transform 0.42s cubic-bezier(0.3, 1.5, 0.5, 1);
-}
-
-.raised .ch-arm-r {
-  animation: none !important;
-  transform: rotate(-168deg);
-}
-
-.raised .ch-leg-l,
-.raised .ch-leg-r,
-.raised .ch-arm-l {
-  animation: none;
 }
 
 /* ================= Walk out and curtain ================= */
@@ -949,23 +854,6 @@ html.zooming {
   position: fixed;
   transform-origin: center center;
   will-change: transform;
-}
-
-.palm {
-  position: fixed;
-  left: -35px;
-  top: -42px;
-  width: 70px;
-  height: 84px;
-  transform: translate(-200px, -200px);
-  will-change: transform;
-}
-
-.palm svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
 }
 
 .walkBlack {
@@ -1050,8 +938,8 @@ html.zooming {
   }
 
   .who .char {
-    width: 124px;
-    height: 217px;
+    width: 132px;
+    height: 236px;
     left: 10px;
     bottom: 8px;
   }

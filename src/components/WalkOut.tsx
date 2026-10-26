@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCurtain } from '@/lib/curtain';
-import { Character, Palm, skinTones, type CharacterKind } from './Characters';
+import { Character, type CharacterKind } from './Characters';
 
 export interface WalkStart {
   kind: CharacterKind;
@@ -15,7 +15,7 @@ const wait = (ms: number) => new Promise<void>((r) => window.setTimeout(r, ms));
 
 /**
  * The exit from the persona screen. The chosen character walks to the middle of the screen,
- * raises a hand, the hand grows over the whole screen and the screen goes black.
+ * then steps up to the viewer until the whole screen is filled and goes black.
  * Then the next screen opens. About 3 seconds in total.
  */
 export function WalkOut({ start }: { start: WalkStart }) {
@@ -23,18 +23,16 @@ export function WalkOut({ start }: { start: WalkStart }) {
   const curtain = useCurtain();
   const dim = useRef<HTMLDivElement>(null);
   const walker = useRef<HTMLDivElement>(null);
-  const palm = useRef<HTMLDivElement>(null);
   const black = useRef<HTMLDivElement>(null);
-  const [phase, setPhase] = useState<'walk' | 'raise'>('walk');
+  const [phase, setPhase] = useState<'walk' | 'step'>('walk');
 
   useEffect(() => {
     let alive = true;
     const run = async () => {
       const el = walker.current;
-      const pal = palm.current;
       const bl = black.current;
       const dm = dim.current;
-      if (!el || !pal || !bl || !dm) return;
+      if (!el || !bl || !dm) return;
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const { rect } = start;
@@ -57,24 +55,22 @@ export function WalkOut({ start }: { start: WalkStart }) {
       await walkAnim.finished;
       if (!alive) return;
 
-      setPhase('raise');
-      await wait(480);
-      if (!alive) return;
-
-      const hand = el.querySelector('.ch-hand')?.getBoundingClientRect();
-      const hx = hand ? hand.left + hand.width / 2 : vw / 2;
-      const hy = hand ? hand.top + hand.height / 2 : vh * 0.3;
-      const big = (2.8 * Math.max(vw, vh)) / 70;
-      const grow = pal.animate(
+      // one more step towards the viewer: the person grows until they fill the screen
+      setPhase('step');
+      const big = (s * Math.max(vh * 2.6, vw * 3.4)) / targetH;
+      const cx = dx;
+      const cy = dy - targetH * 0.12; // aim at the face so the head fills the screen
+      const grow = el.animate(
         [
-          { transform: `translate(${hx}px, ${hy}px) scale(0.35)`, opacity: 1 },
-          { transform: `translate(${vw / 2}px, ${vh / 2}px) scale(${big})`, opacity: 1 },
+          { transform: at(1) },
+          { transform: `translate(${cx}px, ${cy + targetH * 0.55}px) scale(${big})` },
         ],
-        { duration: 1000, easing: 'cubic-bezier(0.55, 0, 0.85, 0.45)', fill: 'forwards' },
+        { duration: 1200, easing: 'cubic-bezier(0.55, 0, 0.9, 0.5)', fill: 'forwards' },
       );
-      bl.animate([{ opacity: 0 }, { opacity: 0, offset: 0.5 }, { opacity: 1 }], { duration: 1000, fill: 'forwards' });
+      bl.animate([{ opacity: 0 }, { opacity: 0, offset: 0.35 }, { opacity: 1 }], { duration: 1200, fill: 'forwards' });
       await grow.finished;
       if (!alive) return;
+      await wait(60);
 
       curtain.cover();
       router.push(start.href);
@@ -94,10 +90,9 @@ export function WalkOut({ start }: { start: WalkStart }) {
     <div className="walkout" aria-hidden="true">
       <div className="walkDim" ref={dim} />
       <div className="walker" ref={walker} style={{ left: rect.left, top: rect.top, width: rect.width, height: rect.height }}>
-        <Character kind={kind} walking={phase === 'walk'} raised={phase === 'raise'} />
-      </div>
-      <div className="palm" ref={palm}>
-        <Palm skin={skinTones[kind]} />
+        <div className={`walkBob${phase === 'walk' ? ' stepping' : ''}`}>
+          <Character kind={kind} />
+        </div>
       </div>
       <div className="walkBlack" ref={black} />
     </div>

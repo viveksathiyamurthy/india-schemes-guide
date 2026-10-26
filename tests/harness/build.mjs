@@ -23,6 +23,7 @@ await build({
 });
 
 cpSync(resolve(root, 'src/app/globals.css'), resolve(out, 'globals.css'));
+cpSync(resolve(root, 'public'), out, { recursive: true });
 writeFileSync(
   resolve(out, 'index.html'),
   `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>harness</title><link rel="stylesheet" href="/globals.css"></head><body><div id="root"></div><script src="/app.js"></script></body></html>`,
