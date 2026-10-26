@@ -27,7 +27,7 @@ const FOV = (36 * Math.PI) / 180;
 const SPACE = 3.9;
 /** Content sits a little low on screen so the top is free for the search once the zoom is over (NDC units). */
 const SY = 0.2;
-const HOME_DIST = 1.75;
+const HOME_DIST = 1.55;
 const CLOSE = 1.035;
 const HOME = { lon: 79.4, lat: 13.7 };
 /** Where each name is painted, [lon, lat]. */
@@ -278,7 +278,7 @@ export function PlanetMap({ onFail, onReady }: { onFail: () => void; onReady?: (
       if (canvas.height !== ch) canvas.height = ch;
       gl.viewport(0, 0, canvas.width, canvas.height);
       // keep the five states the same width on screen, whatever the shape of the screen
-      thY = Math.min(Math.tan((70 * Math.PI) / 360), Math.max(Math.tan(FOV / 2), 0.165 / ((HOME_DIST - 1) * (w / h))));
+      thY = Math.min(Math.tan((70 * Math.PI) / 360), Math.max(Math.tan(FOV / 2), 0.125 / ((HOME_DIST - 1) * (w / h))));
       paintStars(cw, ch, dpr);
     };
     const paintStars = (cw: number, ch: number, dpr: number) => {

@@ -252,6 +252,41 @@ export function paintPatch(canvas: HTMLCanvasElement) {
     ctx.stroke();
   });
   ctx.setLineDash([]);
+  // Everything outside the five states goes soft and a little dim, so the eye stays on them.
+  // (shrink and stretch back up instead of ctx.filter, which not every phone browser supports)
+  {
+    const small = document.createElement('canvas');
+    small.width = Math.max(8, Math.round(w / 14));
+    small.height = Math.max(8, Math.round(h / 14));
+    const sc = small.getContext('2d', { willReadFrequently: true })!;
+    sc.imageSmoothingQuality = 'high';
+    sc.drawImage(canvas, 0, 0, small.width, small.height);
+    const mid = document.createElement('canvas');
+    mid.width = Math.round(small.width * 3);
+    mid.height = Math.round(small.height * 3);
+    const mc = mid.getContext('2d', { willReadFrequently: true })!;
+    mc.imageSmoothingQuality = 'high';
+    mc.drawImage(small, 0, 0, mid.width, mid.height);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, w, h);
+    for (const slug of fiveSlugs) {
+      for (const r of indiaStates[slug]) {
+        for (let i = 0; i < r.length; i += 2) {
+          const [x, y] = proj(r[i], r[i + 1]);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+      }
+    }
+    ctx.clip('evenodd');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(mid, 0, 0, w, h);
+    ctx.fillStyle = 'rgba(4,10,28,0.28)';
+    ctx.fillRect(0, 0, w, h);
+    ctx.restore();
+  }
   // fine satellite grain
   for (let i = 0; i < 60000; i++) {
     ctx.fillStyle = rand() < 0.5 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
