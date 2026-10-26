@@ -32,8 +32,8 @@ const HOME = { lon: 79.4, lat: 13.7 };
 const labelAt: [number, number][] = [
   [78.5, 10.7],
   [73.7, 10.0],
-  [75.9, 14.9],
-  [79.9, 15.5],
+  [74.7, 14.5],
+  [80.5, 15.9],
   [79.1, 18.1],
 ];
 
@@ -59,24 +59,24 @@ void main() {
   vec3 n = normalize(vN);
   float d = dot(n, uLight) * 0.5 + 0.5;
   if (uMode > 2.5) {
-    float a = pow(1.0 - abs(n.z), 3.2) * 0.8 * uGlow;
-    gl_FragColor = vec4(0.78, 0.9, 1.0, a);
+    float a = pow(1.0 - abs(n.z), 3.0) * 0.95 * uGlow;
+    gl_FragColor = vec4(0.28, 0.55, 1.0, a);
     return;
   }
   vec4 t = texture2D(uTex, vUv);
   if (uMode > 1.5) {
-    gl_FragColor = vec4(vec3(1.0, 0.99, 0.97) * (0.84 + 0.16 * d), t.a * 0.9);
+    gl_FragColor = vec4(vec3(1.0) * (0.32 + 0.68 * smoothstep(0.25, 0.7, d)), t.a * 0.85 * (0.1 + 0.9 * uGlow));
     return;
   }
-  vec3 col = t.rgb * (0.82 + 0.26 * d);
-  col += vec3(0.8, 0.92, 1.0) * pow(1.0 - max(n.z, 0.0), 2.6) * 0.2;
+  vec3 col = t.rgb * (0.3 + 0.85 * smoothstep(0.2, 0.75, d));
+  col += vec3(0.35, 0.6, 1.0) * pow(1.0 - max(n.z, 0.0), 3.0) * 0.5;
   float a = 1.0;
   if (uMode > 0.5) {
     float id = texture2D(uId, vUv).r * 255.0;
     float hov = abs(id - uHoverId) < 7.0 ? uHoverT : 0.0;
-    col = mix(col, vec3(1.0, 0.98, 0.9), hov * 0.32);
+    col = mix(col, vec3(1.0, 0.95, 0.7), hov * 0.28);
     float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
-    a = smoothstep(0.0, 0.05, e);
+    a = smoothstep(0.0, 0.16, e);
   }
   gl_FragColor = vec4(col, a);
 }`;
@@ -253,7 +253,7 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
     let visible = true;
     const t0 = performance.now();
     if (!introPlayed) {
-      intro = { start: t0, dur: 5200, q0: faceTo(22, 18, 0.55), d0: SPACE };
+      intro = { start: t0, dur: 8000, q0: faceTo(-35, 12, 0.35), d0: SPACE };
       q = intro.q0;
       dist = SPACE;
     } else {
@@ -437,7 +437,7 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
 
       /* names are painted on the map: they follow their state and fade in once we are close */
       const th = Math.tan(FOV / 2);
-      const near = fly ? 0 : clamp01((2.6 - dist) / 0.9);
+      const near = fly ? 0 : clamp01((2.0 - dist) / 0.4);
       labelDirs.forEach((dir, i) => {
         const el = labelRefs.current[i];
         if (!el) return;

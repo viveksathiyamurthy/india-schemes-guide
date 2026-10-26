@@ -84,14 +84,15 @@ function trace(ctx: CanvasRenderingContext2D, rings: number[][], proj: Proj) {
 const otherIndia = Object.keys(indiaStates).filter((k) => !fiveSlugs.includes(k));
 const landRings = (): number[][] => [...otherLand, ...otherIndia.flatMap((k) => indiaStates[k])];
 
+/** Satellite-photo palette: deep blue sea, teal shallows, green and tan land. */
 const PASTEL = {
-  sea: ['#CBE9EE', '#A9D9E3', '#B7E0E6'],
-  shallow: '#E3F6F1',
-  land: '#DCE6C6',
-  desert: '#EBE0C0',
-  foam: 'rgba(255,255,255,0.85)',
-  tree: '#8DBF9D',
-  border: 'rgba(255,252,244,0.95)',
+  sea: ['#0B2D63', '#15488C', '#0D3470'],
+  shallow: '#2F8FB0',
+  land: '#5E7F45',
+  desert: '#A8905C',
+  foam: 'rgba(190,230,240,0.35)',
+  tree: '#3F6B3A',
+  border: 'rgba(255,255,255,0.55)',
 };
 /** Soft colours for the five states, the same ones used on the next screen. */
 export const statePastels = states.map((s) => s.color);
@@ -114,14 +115,15 @@ function blotches(ctx: CanvasRenderingContext2D, w: number, h: number, n: number
   ctx.globalAlpha = 1;
 }
 
-function seaPaint(ctx: CanvasRenderingContext2D, w: number, h: number, rand: () => number) {
-  const g = ctx.createLinearGradient(0, 0, 0, h);
+function seaPaint(ctx: CanvasRenderingContext2D, w: number, h: number, rand: () => number, t0 = 0, t1 = 1) {
+  // t0..t1: which slice of the whole-world gradient this canvas shows, so the patch matches the globe at its edge
+  const g = ctx.createLinearGradient(0, (-t0 / (t1 - t0)) * h, 0, ((1 - t0) / (t1 - t0)) * h);
   g.addColorStop(0, PASTEL.sea[0]);
   g.addColorStop(0.5, PASTEL.sea[1]);
   g.addColorStop(1, PASTEL.sea[2]);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
-  blotches(ctx, w, h, Math.round((w * h) / 60000), rand, w * 0.03, w * 0.09, 'rgba(255,255,255,0.9)', 'rgba(120,170,205,0.9)', 0.09);
+  blotches(ctx, w, h, Math.round((w * h) / 60000), rand, w * 0.03, w * 0.09, 'rgba(90,150,215,0.9)', 'rgba(5,25,70,0.9)', 0.16);
 }
 
 /** The whole world, at low detail. */
@@ -137,12 +139,14 @@ export function paintGlobe(canvas: HTMLCanvasElement) {
   ctx.shadowColor = PASTEL.shallow;
   ctx.shadowBlur = w * 0.006;
   const lg = ctx.createLinearGradient(0, 0, 0, h);
-  lg.addColorStop(0, '#EEF2E6');
-  lg.addColorStop(0.2, PASTEL.land);
-  lg.addColorStop(0.38, PASTEL.desert);
-  lg.addColorStop(0.5, '#CFE3BF');
-  lg.addColorStop(0.62, PASTEL.desert);
-  lg.addColorStop(0.8, PASTEL.land);
+  lg.addColorStop(0, '#F2F6FA');
+  lg.addColorStop(0.1, '#C9D2C4');
+  lg.addColorStop(0.22, '#6F8A52');
+  lg.addColorStop(0.36, PASTEL.desert);
+  lg.addColorStop(0.5, '#3F7A3C');
+  lg.addColorStop(0.64, PASTEL.desert);
+  lg.addColorStop(0.8, '#5E7F45');
+  lg.addColorStop(0.92, '#E4EAEE');
   ctx.fillStyle = lg;
   trace(ctx, rings, proj);
   ctx.fill();
@@ -150,18 +154,20 @@ export function paintGlobe(canvas: HTMLCanvasElement) {
   ctx.save();
   trace(ctx, rings, proj);
   ctx.clip();
-  blotches(ctx, w, h, 500, rand, w * 0.004, w * 0.016, 'rgba(255,255,255,0.9)', 'rgba(130,170,120,0.9)', 0.16);
+  blotches(ctx, w, h, 500, rand, w * 0.004, w * 0.016, 'rgba(190,170,110,0.9)', 'rgba(35,85,45,0.9)', 0.3);
   ctx.restore();
   ctx.strokeStyle = PASTEL.foam;
   ctx.lineWidth = Math.max(1, w / 1400);
   trace(ctx, rings, proj);
   ctx.stroke();
   // the five states, in their soft colours
+  ctx.globalAlpha = 0.28;
   fiveSlugs.forEach((slug, i) => {
     ctx.fillStyle = statePastels[i];
     trace(ctx, indiaStates[slug], proj);
     ctx.fill();
   });
+  ctx.globalAlpha = 1;
 }
 
 /** Sharper picture of South Asia, laid over the globe. */
@@ -172,7 +178,7 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   const rand = rng(21);
   const proj: Proj = (lon, lat) => [((lon - PATCH.lon0) / (PATCH.lon1 - PATCH.lon0)) * w, ((PATCH.lat1 - lat) / (PATCH.lat1 - PATCH.lat0)) * h];
   const ppd = w / (PATCH.lon1 - PATCH.lon0); // pixels per degree
-  seaPaint(ctx, w, h, rand);
+  seaPaint(ctx, w, h, rand, (90 - PATCH.lat1) / 180, (90 - PATCH.lat0) / 180);
   // sea gets a little deeper away from the land
   const rings = landRings();
   ctx.save();
@@ -184,13 +190,17 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   ctx.fill();
   ctx.restore();
   // other land
-  ctx.fillStyle = PASTEL.land;
+  const landG = ctx.createLinearGradient(0, 0, 0, h);
+  landG.addColorStop(0, '#9C8A5A');
+  landG.addColorStop(0.45, '#8A8A55');
+  landG.addColorStop(1, '#4F7A3E');
+  ctx.fillStyle = landG;
   trace(ctx, rings, proj);
   ctx.fill();
   ctx.save();
   trace(ctx, rings, proj);
   ctx.clip();
-  blotches(ctx, w, h, 900, rand, ppd * 0.12, ppd * 0.5, 'rgba(255,255,255,0.9)', 'rgba(205,190,140,0.9)', 0.16);
+  blotches(ctx, w, h, 1100, rand, ppd * 0.12, ppd * 0.5, 'rgba(205,180,120,0.9)', 'rgba(60,100,50,0.9)', 0.3);
   ctx.restore();
   ctx.strokeStyle = PASTEL.foam;
   ctx.lineWidth = ppd * 0.05;
@@ -199,13 +209,18 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   // the five states
   fiveSlugs.forEach((slug, i) => {
     const rs = indiaStates[slug];
-    ctx.fillStyle = statePastels[i];
+    // base satellite colour first, then a light wash of the state's own colour
+    ctx.fillStyle = '#7C8A52';
     trace(ctx, rs, proj);
     ctx.fill();
     ctx.save();
     trace(ctx, rs, proj);
     ctx.clip();
-    blotches(ctx, w, h, 700, rand, ppd * 0.1, ppd * 0.45, 'rgba(255,255,255,0.95)', 'rgba(150,100,90,0.9)', 0.14);
+    blotches(ctx, w, h, 900, rand, ppd * 0.1, ppd * 0.45, 'rgba(190,150,95,0.95)', 'rgba(40,95,45,0.9)', 0.38);
+    ctx.globalAlpha = 0.22;
+    ctx.fillStyle = statePastels[i];
+    ctx.fillRect(0, 0, w, h);
+    ctx.globalAlpha = 1;
     // small painted trees and hills
     const [x0, y0, x1, y1] = boxes[i];
     for (let k = 0; k < 1400; k++) {
@@ -214,7 +229,7 @@ export function paintPatch(canvas: HTMLCanvasElement) {
       if (!inside(rs, lon, lat)) continue;
       const [px, py] = proj(lon, lat);
       const r = ppd * (0.035 + rand() * 0.03);
-      ctx.fillStyle = 'rgba(120,175,135,0.55)';
+      ctx.fillStyle = 'rgba(30,85,45,0.28)';
       for (let c = 0; c < 3; c++) {
         ctx.beginPath();
         ctx.arc(px + (c - 1) * r * 0.9, py + (c % 2) * r * 0.5, r, 0, Math.PI * 2);
@@ -226,14 +241,16 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   // soft borders between the states, and a light coast line
   ctx.lineJoin = 'round';
   ctx.strokeStyle = PASTEL.border;
-  ctx.lineWidth = ppd * 0.045;
+  ctx.setLineDash([ppd * 0.06, ppd * 0.05]);
+  ctx.lineWidth = ppd * 0.03;
   fiveSlugs.forEach((slug) => {
     trace(ctx, indiaStates[slug], proj);
     ctx.stroke();
   });
-  // paper grain
+  ctx.setLineDash([]);
+  // fine satellite grain
   for (let i = 0; i < 60000; i++) {
-    ctx.fillStyle = rand() < 0.5 ? 'rgba(255,255,255,0.05)' : 'rgba(90,70,90,0.04)';
+    ctx.fillStyle = rand() < 0.5 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
     ctx.fillRect(rand() * w, rand() * h, 2, 2);
   }
 }
