@@ -33,8 +33,8 @@ const HOME = { lon: 79.4, lat: 13.7 };
 /** Where each name is painted, [lon, lat]. */
 const labelAt: [number, number][] = [
   [78.5, 10.7],
-  [73.7, 10.0],
-  [74.7, 14.5],
+  [74.9, 9.8],
+  [75.6, 14.3],
   [80.5, 15.9],
   [79.1, 18.1],
 ];

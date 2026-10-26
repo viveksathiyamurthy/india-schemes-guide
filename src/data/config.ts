@@ -15,11 +15,11 @@ export interface StateInfo {
 }
 
 export const states: StateInfo[] = [
-  { slug: 'tamil-nadu', name: 'Tamil Nadu', nameTa: 'தமிழ்நாடு', local: 'தமிழ்நாடு', localLang: 'ta', available: true, color: '#F5AE92', onColor: '#2B2540' },
-  { slug: 'kerala', name: 'Kerala', nameTa: 'கேரளா', local: 'കേരളം', localLang: 'ml', available: false, color: '#A9D8B8', onColor: '#2B2540' },
-  { slug: 'karnataka', name: 'Karnataka', nameTa: 'கர்நாடகா', local: 'ಕರ್ನಾಟಕ', localLang: 'kn', available: false, color: '#F4DD8F', onColor: '#2B2540' },
-  { slug: 'andhra-pradesh', name: 'Andhra Pradesh', nameTa: 'ஆந்திரப் பிரதேசம்', local: 'ఆంధ్ర ప్రదేశ్', localLang: 'te', available: false, color: '#EFAAC0', onColor: '#2B2540' },
-  { slug: 'telangana', name: 'Telangana', nameTa: 'தெலுங்கானா', local: 'తెలంగాణ', localLang: 'te', available: false, color: '#BDACE3', onColor: '#2B2540' },
+  { slug: 'tamil-nadu', name: 'Tamil Nadu', nameTa: 'தமிழ்நாடு', local: 'தமிழ்நாடு', localLang: 'ta', available: true, color: '#F8BB96', onColor: '#2B2540' },
+  { slug: 'kerala', name: 'Kerala', nameTa: 'கேரளா', local: 'കേരളം', localLang: 'ml', available: false, color: '#FADADD', onColor: '#2B2540' },
+  { slug: 'karnataka', name: 'Karnataka', nameTa: 'கர்நாடகா', local: 'ಕರ್ನಾಟಕ', localLang: 'kn', available: false, color: '#BFC9D2', onColor: '#2B2540' },
+  { slug: 'andhra-pradesh', name: 'Andhra Pradesh', nameTa: 'ஆந்திரப் பிரதேசம்', local: 'ఆంధ్ర ప్రదేశ్', localLang: 'te', available: false, color: '#5B7088', onColor: '#FFFFFF' },
+  { slug: 'telangana', name: 'Telangana', nameTa: 'தெலுங்கானா', local: 'తెలంగాణ', localLang: 'te', available: false, color: '#4A5560', onColor: '#FFFFFF' },
 ];
 
 export interface Persona {

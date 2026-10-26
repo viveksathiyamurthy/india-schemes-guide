@@ -165,7 +165,7 @@ export function paintGlobe(canvas: HTMLCanvasElement) {
   trace(ctx, rings, proj);
   ctx.stroke();
   // the five states, in their soft colours
-  ctx.globalAlpha = 0.28;
+  ctx.globalAlpha = 0.74;
   fiveSlugs.forEach((slug, i) => {
     ctx.fillStyle = statePastels[i];
     trace(ctx, indiaStates[slug], proj);
@@ -221,7 +221,7 @@ export function paintPatch(canvas: HTMLCanvasElement) {
     trace(ctx, rs, proj);
     ctx.clip();
     blotches(ctx, w, h, 900, rand, ppd * 0.1, ppd * 0.45, 'rgba(190,150,95,0.95)', 'rgba(40,95,45,0.9)', 0.38);
-    ctx.globalAlpha = 0.22;
+    ctx.globalAlpha = 0.74;
     ctx.fillStyle = statePastels[i];
     ctx.fillRect(0, 0, w, h);
     ctx.globalAlpha = 1;
@@ -252,46 +252,136 @@ export function paintPatch(canvas: HTMLCanvasElement) {
     ctx.stroke();
   });
   ctx.setLineDash([]);
-  // Everything outside the five states goes soft and a little dim, so the eye stays on them.
-  // (shrink and stretch back up instead of ctx.filter, which not every phone browser supports)
-  {
-    const small = document.createElement('canvas');
-    small.width = Math.max(8, Math.round(w / 14));
-    small.height = Math.max(8, Math.round(h / 14));
-    const sc = small.getContext('2d', { willReadFrequently: true })!;
-    sc.imageSmoothingQuality = 'high';
-    sc.drawImage(canvas, 0, 0, small.width, small.height);
-    const mid = document.createElement('canvas');
-    mid.width = Math.round(small.width * 3);
-    mid.height = Math.round(small.height * 3);
-    const mc = mid.getContext('2d', { willReadFrequently: true })!;
-    mc.imageSmoothingQuality = 'high';
-    mc.drawImage(small, 0, 0, mid.width, mid.height);
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, w, h);
-    for (const slug of fiveSlugs) {
-      for (const r of indiaStates[slug]) {
-        for (let i = 0; i < r.length; i += 2) {
-          const [x, y] = proj(r[i], r[i + 1]);
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        }
-        ctx.closePath();
-      }
-    }
-    ctx.clip('evenodd');
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(mid, 0, 0, w, h);
-    ctx.fillStyle = 'rgba(4,10,28,0.28)';
-    ctx.fillRect(0, 0, w, h);
-    ctx.restore();
-  }
   // fine satellite grain
   for (let i = 0; i < 60000; i++) {
     ctx.fillStyle = rand() < 0.5 ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
     ctx.fillRect(rand() * w, rand() * h, 2, 2);
   }
+  softenOutside(canvas, proj);
+}
+
+/**
+ * The five states stay sharp. Going away from them the picture gets softer step by step
+ * (a few blur levels faded into each other by distance) until it is completely blurred.
+ * Shrinking and stretching a copy is used as the blur, because ctx.filter is not on every phone.
+ */
+function softenOutside(canvas: HTMLCanvasElement, proj: Proj) {
+  const w = canvas.width;
+  const h = canvas.height;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  const GS = 256; // distance grid, one cell is about 0.11 degrees
+  const cellDeg = (PATCH.lon1 - PATCH.lon0) / GS;
+
+  // 1) how far is every cell from the five states (in degrees)
+  const g = document.createElement('canvas');
+  g.width = GS;
+  g.height = GS;
+  const gc = g.getContext('2d', { willReadFrequently: true })!;
+  gc.fillStyle = '#000';
+  gc.fillRect(0, 0, GS, GS);
+  gc.fillStyle = '#fff';
+  gc.scale(GS / w, GS / h);
+  for (const slug of fiveSlugs) {
+    trace(gc, indiaStates[slug], proj);
+    gc.fill();
+  }
+  const px = gc.getImageData(0, 0, GS, GS).data;
+  const INF = 1e6;
+  const d = new Float32Array(GS * GS);
+  for (let i = 0; i < d.length; i++) d[i] = px[i * 4] > 127 ? 0 : INF;
+  const A = 1, B = 1.4142;
+  for (let y = 0; y < GS; y++) {
+    for (let x = 0; x < GS; x++) {
+      const i = y * GS + x;
+      let v = d[i];
+      if (x > 0) v = Math.min(v, d[i - 1] + A);
+      if (y > 0) {
+        v = Math.min(v, d[i - GS] + A);
+        if (x > 0) v = Math.min(v, d[i - GS - 1] + B);
+        if (x < GS - 1) v = Math.min(v, d[i - GS + 1] + B);
+      }
+      d[i] = v;
+    }
+  }
+  for (let y = GS - 1; y >= 0; y--) {
+    for (let x = GS - 1; x >= 0; x--) {
+      const i = y * GS + x;
+      let v = d[i];
+      if (x < GS - 1) v = Math.min(v, d[i + 1] + A);
+      if (y < GS - 1) {
+        v = Math.min(v, d[i + GS] + A);
+        if (x < GS - 1) v = Math.min(v, d[i + GS + 1] + B);
+        if (x > 0) v = Math.min(v, d[i + GS - 1] + B);
+      }
+      d[i] = v;
+    }
+  }
+
+  // 2) a mask per blur level: transparent near the states, opaque further away
+  const smooth = (a: number, b: number, v: number) => {
+    const t = Math.max(0, Math.min(1, (v - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  };
+  const maskOf = (fn: (deg: number) => number, rgb: [number, number, number]) => {
+    const m = document.createElement('canvas');
+    m.width = GS;
+    m.height = GS;
+    const mc = m.getContext('2d', { willReadFrequently: true })!;
+    const im = mc.createImageData(GS, GS);
+    for (let i = 0; i < d.length; i++) {
+      im.data[i * 4] = rgb[0];
+      im.data[i * 4 + 1] = rgb[1];
+      im.data[i * 4 + 2] = rgb[2];
+      im.data[i * 4 + 3] = Math.round(255 * fn(d[i] * cellDeg));
+    }
+    mc.putImageData(im, 0, 0);
+    return m;
+  };
+
+  // 3) blurred copies of the picture, from slightly soft to completely blurred
+  const original = document.createElement('canvas');
+  original.width = w;
+  original.height = h;
+  original.getContext('2d')!.drawImage(canvas, 0, 0);
+  const blurred = (shrink: number) => {
+    const sw = Math.max(4, Math.round(w / shrink));
+    const small = document.createElement('canvas');
+    small.width = sw;
+    small.height = sw;
+    const sc = small.getContext('2d')!;
+    sc.imageSmoothingQuality = 'high';
+    sc.drawImage(original, 0, 0, sw, sw);
+    const mid = document.createElement('canvas');
+    mid.width = sw * 3;
+    mid.height = sw * 3;
+    const mc = mid.getContext('2d')!;
+    mc.imageSmoothingQuality = 'high';
+    mc.drawImage(small, 0, 0, mid.width, mid.height);
+    return mid;
+  };
+  const levels: { shrink: number; from: number; to: number }[] = [
+    { shrink: 5, from: 0.1, to: 0.9 },
+    { shrink: 12, from: 0.7, to: 1.9 },
+    { shrink: 28, from: 1.6, to: 3.2 },
+    { shrink: 70, from: 2.8, to: 4.8 },
+  ];
+  const tmp = document.createElement('canvas');
+  tmp.width = w;
+  tmp.height = h;
+  const tc = tmp.getContext('2d')!;
+  ctx.imageSmoothingQuality = 'high';
+  for (const lv of levels) {
+    const mask = maskOf((deg) => smooth(lv.from, lv.to, deg), [0, 0, 0]);
+    tc.globalCompositeOperation = 'source-over';
+    tc.clearRect(0, 0, w, h);
+    tc.imageSmoothingQuality = 'high';
+    tc.drawImage(blurred(lv.shrink), 0, 0, w, h);
+    tc.globalCompositeOperation = 'destination-in';
+    tc.drawImage(mask, 0, 0, w, h);
+    ctx.drawImage(tmp, 0, 0);
+  }
+  // 4) the further from the states, the darker, so the eye stays on them
+  ctx.drawImage(maskOf((deg) => 0.4 * smooth(0.3, 4.5, deg), [4, 10, 28]), 0, 0, w, h);
 }
 
 /** One flat colour per state, so the screen can tell which state a pixel is in. */
