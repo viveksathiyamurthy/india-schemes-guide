@@ -24,8 +24,10 @@ import {
 
 const FOV = (36 * Math.PI) / 180;
 /** Camera distances, in globe radiuses: far in space, and close over the five states. */
-const SPACE = 4.6;
-const HOME_DIST = 1.55;
+const SPACE = 3.9;
+/** Content sits a little low on screen so the top is free for the search once the zoom is over (NDC units). */
+const SY = 0.2;
+const HOME_DIST = 1.75;
 const CLOSE = 1.035;
 const HOME = { lon: 79.4, lat: 13.7 };
 /** Where each name is painted, [lon, lat]. */
@@ -69,14 +71,14 @@ void main() {
     return;
   }
   vec3 col = t.rgb * (0.3 + 0.85 * smoothstep(0.2, 0.75, d));
-  col += vec3(0.35, 0.6, 1.0) * pow(1.0 - max(n.z, 0.0), 3.0) * 0.5;
+  col += vec3(0.35, 0.6, 1.0) * pow(1.0 - max(n.z, 0.0), 4.0) * 0.12;
   float a = 1.0;
   if (uMode > 0.5) {
     float id = texture2D(uId, vUv).r * 255.0;
     float hov = abs(id - uHoverId) < 7.0 ? uHoverT : 0.0;
     col = mix(col, vec3(1.0, 0.95, 0.7), hov * 0.28);
     float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
-    a = smoothstep(0.0, 0.16, e);
+    a = 1.0;
   }
   gl_FragColor = vec4(col, a);
 }`;
@@ -103,7 +105,7 @@ let introPlayed = false;
  * Screen 1 as a painted globe, in the style of a soft storybook. It starts in space, glides
  * down and settles over the five southern states. Drag to look around, tap a state to fly in.
  */
-export function PlanetMap({ onFail }: { onFail: () => void }) {
+export function PlanetMap({ onFail, onReady }: { onFail: () => void; onReady?: () => void }) {
   const { t, tr } = useLang();
   const router = useRouter();
   const [picked, setPicked] = useState<string | null>(null);
@@ -117,6 +119,9 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
   soonRef.current = setSoon;
   const failRef = useRef(onFail);
   failRef.current = onFail;
+  const readyRef = useRef(onReady);
+  readyRef.current = onReady;
+  const starsRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -209,7 +214,6 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
     const meshGlobe = upload(sphereMesh(1));
     const meshPatch = upload(patchMesh(1.0007));
     const meshCloud = upload(sphereMesh(1.016, 96, 48));
-    const meshGlow = upload(sphereMesh(1.09, 64, 32));
     const aPos = gl.getAttribLocation(prog, 'aPos');
     const aUv = gl.getAttribLocation(prog, 'aUv');
     gl.enableVertexAttribArray(aPos);
@@ -249,11 +253,12 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
     const FLY = 2700;
     let w = 1;
     let h = 1;
+    let thY = Math.tan(FOV / 2);
     let raf = 0;
     let visible = true;
     const t0 = performance.now();
     if (!introPlayed) {
-      intro = { start: t0, dur: 8000, q0: faceTo(-35, 12, 0.35), d0: SPACE };
+      intro = { start: t0, dur: 7500, q0: faceTo(-35, 12, 0.35), d0: SPACE };
       q = intro.q0;
       dist = SPACE;
     } else {
@@ -272,6 +277,39 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
       if (canvas.width !== cw) canvas.width = cw;
       if (canvas.height !== ch) canvas.height = ch;
       gl.viewport(0, 0, canvas.width, canvas.height);
+      // keep the five states the same width on screen, whatever the shape of the screen
+      thY = Math.min(Math.tan((70 * Math.PI) / 360), Math.max(Math.tan(FOV / 2), 0.165 / ((HOME_DIST - 1) * (w / h))));
+      paintStars(cw, ch, dpr);
+    };
+    const paintStars = (cw: number, ch: number, dpr: number) => {
+      const sc = starsRef.current;
+      if (!sc) return;
+      if (sc.width !== cw) sc.width = cw;
+      if (sc.height !== ch) sc.height = ch;
+      const c = sc.getContext('2d');
+      if (!c) return;
+      c.clearRect(0, 0, cw, ch);
+      let seed = 7;
+      const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+      const n = Math.round((cw * ch) / (dpr * dpr) / 700);
+      for (let i = 0; i < n; i++) {
+        const x = rnd() * cw;
+        const y = rnd() * ch;
+        const big = Math.pow(rnd(), 4);
+        const r = (0.5 + big * 1.7) * dpr;
+        const a = 0.55 + rnd() * 0.45;
+        const tint = rnd();
+        c.fillStyle = tint < 0.15 ? `rgba(190,210,255,${a})` : tint < 0.25 ? `rgba(255,230,200,${a})` : `rgba(255,255,255,${a})`;
+        if (big > 0.5) {
+          c.shadowColor = 'rgba(200,220,255,0.9)';
+          c.shadowBlur = r * 3;
+        } else {
+          c.shadowBlur = 0;
+        }
+        c.beginPath();
+        c.arc(x, y, r, 0, Math.PI * 2);
+        c.fill();
+      }
     };
     resize();
     const ro = new ResizeObserver(resize);
@@ -281,8 +319,8 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
       const r = canvas.getBoundingClientRect();
       const nx = ((clientX - r.left) / r.width) * 2 - 1;
       const ny = -(((clientY - r.top) / r.height) * 2 - 1);
-      const th = Math.tan(FOV / 2);
-      const d = norm([nx * (r.width / r.height) * th, ny * th, -1]);
+      const th = thY;
+      const d = norm([nx * (r.width / r.height) * th, (ny + SY) * th, -1]);
       const b = dist * d[2];
       const c = dist * dist - 1;
       const disc = b * b - c;
@@ -313,7 +351,7 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
         if (down.moved > 6) {
           interacted = true;
           lastTouch = performance.now();
-          const k = (2 * Math.tan(FOV / 2) * (dist - 0.9)) / Math.max(h, 1);
+          const k = (2 * thY * (dist - 0.9)) / Math.max(h, 1);
           vel = [dx * k, dy * k];
           q = qNorm(qMul(qMul(qAxis([0, 1, 0], dx * k), qAxis([1, 0, 0], dy * k)), q));
         }
@@ -394,6 +432,7 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
         if (p >= 1) {
           intro = null;
           introPlayed = true;
+          readyRef.current?.();
           q = homeQ;
           dist = HOME_DIST;
         }
@@ -412,7 +451,9 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
       hoverT += (hoverTarget - hoverT) * Math.min(1, dt * 10);
 
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.uniformMatrix4fv(U.proj, false, perspective(FOV, w / h, 0.004, 30));
+      const pm = perspective(2 * Math.atan(thY), w / h, 0.004, 30);
+      pm[9] = SY;
+      gl.uniformMatrix4fv(U.proj, false, pm);
       gl.uniformMatrix4fv(U.view, false, translation(0, 0, -dist));
       gl.uniform1f(U.hoverId, hover >= 0 ? 40 * (hover + 1) : -100);
       gl.uniform1f(U.hoverT, hoverT);
@@ -433,11 +474,10 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
       draw(meshCloud, texCloud, 2);
       gl.uniformMatrix4fv(U.model, false, mat4FromQuat(q));
       gl.uniformMatrix3fv(U.rot, false, mat3FromQuat(q));
-      if (dist > 1.75) draw(meshGlow, null, 3);
 
       /* names are painted on the map: they follow their state and fade in once we are close */
-      const th = Math.tan(FOV / 2);
-      const near = fly ? 0 : clamp01((2.0 - dist) / 0.4);
+      const th = thY;
+      const near = fly ? 0 : clamp01((2.15 - dist) / 0.3);
       labelDirs.forEach((dir, i) => {
         const el = labelRefs.current[i];
         if (!el) return;
@@ -446,7 +486,7 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
         const facing = (wp[0] * toCam[0] + wp[1] * toCam[1] + wp[2] * toCam[2]) / Math.hypot(...toCam);
         const depth = dist - wp[2];
         const sx = (wp[0] / (depth * th * (w / h))) * 0.5 * w + w / 2;
-        const sy = (-wp[1] / (depth * th)) * 0.5 * h + h / 2;
+        const sy = (-wp[1] / (depth * th)) * 0.5 * h + h / 2 + SY * 0.5 * h;
         el.style.transform = `translate(${sx}px, ${sy}px) translate(-50%, -50%)`;
         el.style.opacity = String(near * clamp01((facing - 0.1) * 6));
       });
@@ -470,7 +510,7 @@ export function PlanetMap({ onFail }: { onFail: () => void }) {
   return (
     <div className={`mapStage planetStage${picked ? ' picking' : ''}`}>
       <div className="planetBox" ref={boxRef}>
-        <div className="sparkles" aria-hidden="true" />
+        <canvas ref={starsRef} className="stars" aria-hidden="true" />
         <canvas ref={canvasRef} className="planetCanvas" role="img" aria-label={t(ui.mapAria)} />
         <div className="mapLabels" aria-hidden="true">
           {states.map((s, i) => (

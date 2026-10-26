@@ -94,6 +94,17 @@ const PASTEL = {
   tree: '#3F6B3A',
   border: 'rgba(255,255,255,0.55)',
 };
+/** Land colour by latitude (0 = north pole, 1 = south pole), shared by the globe and the sharper patch so they blend. */
+const LAND_STOPS: [number, string][] = [
+  [0, '#F2F6FA'],
+  [0.1, '#C9D2C4'],
+  [0.22, '#6F8A52'],
+  [0.36, '#A8905C'],
+  [0.5, '#3F7A3C'],
+  [0.64, '#A8905C'],
+  [0.8, '#5E7F45'],
+  [0.92, '#E4EAEE'],
+];
 /** Soft colours for the five states, the same ones used on the next screen. */
 export const statePastels = states.map((s) => s.color);
 
@@ -139,14 +150,7 @@ export function paintGlobe(canvas: HTMLCanvasElement) {
   ctx.shadowColor = PASTEL.shallow;
   ctx.shadowBlur = w * 0.006;
   const lg = ctx.createLinearGradient(0, 0, 0, h);
-  lg.addColorStop(0, '#F2F6FA');
-  lg.addColorStop(0.1, '#C9D2C4');
-  lg.addColorStop(0.22, '#6F8A52');
-  lg.addColorStop(0.36, PASTEL.desert);
-  lg.addColorStop(0.5, '#3F7A3C');
-  lg.addColorStop(0.64, PASTEL.desert);
-  lg.addColorStop(0.8, '#5E7F45');
-  lg.addColorStop(0.92, '#E4EAEE');
+  for (const [t, c] of LAND_STOPS) lg.addColorStop(t, c);
   ctx.fillStyle = lg;
   trace(ctx, rings, proj);
   ctx.fill();
@@ -190,10 +194,10 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   ctx.fill();
   ctx.restore();
   // other land
-  const landG = ctx.createLinearGradient(0, 0, 0, h);
-  landG.addColorStop(0, '#9C8A5A');
-  landG.addColorStop(0.45, '#8A8A55');
-  landG.addColorStop(1, '#4F7A3E');
+  const pt0 = (90 - PATCH.lat1) / 180;
+  const pt1 = (90 - PATCH.lat0) / 180;
+  const landG = ctx.createLinearGradient(0, (-pt0 / (pt1 - pt0)) * h, 0, ((1 - pt0) / (pt1 - pt0)) * h);
+  for (const [t, c] of LAND_STOPS) landG.addColorStop(t, c);
   ctx.fillStyle = landG;
   trace(ctx, rings, proj);
   ctx.fill();
@@ -210,7 +214,7 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   fiveSlugs.forEach((slug, i) => {
     const rs = indiaStates[slug];
     // base satellite colour first, then a light wash of the state's own colour
-    ctx.fillStyle = '#7C8A52';
+    ctx.fillStyle = '#6F8A4C';
     trace(ctx, rs, proj);
     ctx.fill();
     ctx.save();
@@ -277,7 +281,7 @@ export function paintClouds(canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
   const rand = rng(9);
   ctx.clearRect(0, 0, w, h);
-  for (let i = 0; i < 150; i++) {
+  for (let i = 0; i < 50; i++) {
     const lon = -180 + rand() * 360;
     const lat = -60 + rand() * 120;
     if (lon > 52 && lon < 104 && lat > -12 && lat < 38) continue;
@@ -289,8 +293,8 @@ export function paintClouds(canvas: HTMLCanvasElement) {
       const cy = y + (c % 2 ? -1 : 1) * size * 0.18;
       const r = size * (0.7 + rand() * 0.5);
       const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g.addColorStop(0, 'rgba(255,255,255,0.95)');
-      g.addColorStop(0.6, 'rgba(255,255,255,0.7)');
+      g.addColorStop(0, 'rgba(255,255,255,0.8)');
+      g.addColorStop(0.6, 'rgba(255,255,255,0.5)');
       g.addColorStop(1, 'rgba(255,255,255,0)');
       ctx.fillStyle = g;
       ctx.beginPath();

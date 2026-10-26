@@ -26,6 +26,13 @@ export function WelcomeView() {
     const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     setView(!calm && webglWorks() ? 'planet' : 'flat');
   }, []);
+  // On the 3D globe the whole screen is space. The strip and search only appear once the zoom has finished.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (view === 'planet') root.classList.add('space');
+    else root.classList.remove('space', 'spaceReady');
+    return () => root.classList.remove('space', 'spaceReady');
+  }, [view]);
   return (
     <div className="page welcome">
       <div className="intro">
@@ -34,7 +41,7 @@ export function WelcomeView() {
         <SearchBar />
         <h2 className="mapTitle">{t(ui.chooseState)}</h2>
       </div>
-      {view === 'planet' ? <PlanetMap onFail={() => setView('flat')} /> : view === 'flat' ? <StateMap /> : <div className="mapStage"><div className="planetBox" /></div>}
+      {view === 'planet' ? <PlanetMap onFail={() => setView('flat')} onReady={() => document.documentElement.classList.add('spaceReady')} /> : view === 'flat' ? <StateMap /> : <div className="mapStage"><div className="planetBox" /></div>}
     </div>
   );
 }
