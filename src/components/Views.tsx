@@ -34,7 +34,7 @@ export function WelcomeView() {
         <SearchBar />
         <h2 className="mapTitle">{t(ui.chooseState)}</h2>
       </div>
-      {view === 'planet' ? <PlanetMap /> : view === 'flat' ? <StateMap /> : <div className="mapStage"><div className="planetBox" /></div>}
+      {view === 'planet' ? <PlanetMap onFail={() => setView('flat')} /> : view === 'flat' ? <StateMap /> : <div className="mapStage"><div className="planetBox" /></div>}
     </div>
   );
 }

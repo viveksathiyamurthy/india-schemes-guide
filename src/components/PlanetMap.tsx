@@ -5,60 +5,80 @@ import { useRouter } from 'next/navigation';
 import { useLang } from '@/lib/lang';
 import { ui } from '@/lib/ui';
 import { states, type StateInfo } from '@/data/config';
+import { centers, dirOf, lonLatOf, paintClouds, paintGlobe, paintIds, paintPatch, patchMesh, sphereMesh, stateAtLonLat, type GeoMesh } from '@/lib/globe';
 import {
-  buildPlanet,
-  mapToDir,
   mat3FromQuat,
   mat4FromQuat,
   norm,
   perspective,
   qAxis,
   qConj,
-  qFromTo,
   qMul,
   qNorm,
   qRotate,
   qSlerp,
-  stateAt,
   translation,
   type Quat,
   type V3,
-} from '@/lib/planet';
-
-/** Where each name sits on the planet, in map units. */
-const planetLabels: Record<string, { x: number; y: number }> = {
-  'tamil-nadu': { x: 318, y: 610 },
-  kerala: { x: 50, y: 618 },
-  karnataka: { x: 120, y: 300 },
-  'andhra-pradesh': { x: 420, y: 262 },
-  telangana: { x: 292, y: 140 },
-};
+} from '@/lib/quat';
 
 const FOV = (36 * Math.PI) / 180;
-const DIST = 3.9;
+/** Camera distances, in globe radiuses: far in space, and close over the five states. */
+const SPACE = 4.6;
+const HOME_DIST = 1.55;
+const CLOSE = 1.035;
+const HOME = { lon: 79.4, lat: 13.7 };
+/** Where each name is painted, [lon, lat]. */
+const labelAt: [number, number][] = [
+  [78.5, 10.7],
+  [73.7, 10.0],
+  [75.9, 14.9],
+  [79.9, 15.5],
+  [79.1, 18.1],
+];
+
 const VERT = `
-attribute vec3 aPos; attribute vec3 aNor; attribute vec3 aCol; attribute float aState;
+attribute vec3 aPos; attribute vec2 aUv;
 uniform mat4 uProj; uniform mat4 uView; uniform mat4 uModel; uniform mat3 uRot;
-uniform float uHover; uniform float uHoverT;
-varying vec3 vCol; varying vec3 vNor; varying float vHi;
+varying vec2 vUv; varying vec3 vN;
 void main() {
-  float hi = abs(aState - uHover) < 0.5 ? uHoverT : 0.0;
-  vec3 p = aPos * (1.0 + 0.028 * hi);
-  vNor = uRot * aNor;
-  vCol = aCol; vHi = hi;
-  gl_Position = uProj * uView * uModel * vec4(p, 1.0);
+  vUv = aUv;
+  vN = uRot * aPos;
+  gl_Position = uProj * uView * uModel * vec4(aPos, 1.0);
 }`;
 const FRAG = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
 precision mediump float;
-varying vec3 vCol; varying vec3 vNor; varying float vHi;
-uniform vec3 uLight;
+#endif
+varying vec2 vUv; varying vec3 vN;
+uniform sampler2D uTex; uniform sampler2D uId;
+uniform float uMode; uniform vec3 uLight; uniform float uHoverId; uniform float uHoverT; uniform float uGlow;
 void main() {
-  vec3 n = normalize(vNor);
-  float d = max(dot(n, uLight), 0.0);
-  float rim = pow(1.0 - max(n.z, 0.0), 3.0);
-  vec3 c = vCol * (0.5 + 0.62 * d) + vec3(0.85, 0.95, 1.0) * rim * 0.16;
-  c = mix(c, vec3(1.0, 0.97, 0.85), vHi * 0.3);
-  gl_FragColor = vec4(c, 1.0);
+  vec3 n = normalize(vN);
+  float d = dot(n, uLight) * 0.5 + 0.5;
+  if (uMode > 2.5) {
+    float a = pow(1.0 - abs(n.z), 3.2) * 0.8 * uGlow;
+    gl_FragColor = vec4(0.78, 0.9, 1.0, a);
+    return;
+  }
+  vec4 t = texture2D(uTex, vUv);
+  if (uMode > 1.5) {
+    gl_FragColor = vec4(vec3(1.0, 0.99, 0.97) * (0.84 + 0.16 * d), t.a * 0.9);
+    return;
+  }
+  vec3 col = t.rgb * (0.82 + 0.26 * d);
+  col += vec3(0.8, 0.92, 1.0) * pow(1.0 - max(n.z, 0.0), 2.6) * 0.2;
+  float a = 1.0;
+  if (uMode > 0.5) {
+    float id = texture2D(uId, vUv).r * 255.0;
+    float hov = abs(id - uHoverId) < 7.0 ? uHoverT : 0.0;
+    col = mix(col, vec3(1.0, 0.98, 0.9), hov * 0.32);
+    float e = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+    a = smoothstep(0.0, 0.05, e);
+  }
+  gl_FragColor = vec4(col, a);
 }`;
 
 export function webglWorks(): boolean {
@@ -72,12 +92,18 @@ export function webglWorks(): boolean {
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+/** The camera looks straight down at this place, north is up. */
+const faceTo = (lon: number, lat: number, tilt = 0): Quat =>
+  qNorm(qMul(qAxis([1, 0, 0], (lat * Math.PI) / 180 + tilt), qAxis([0, 1, 0], (-lon * Math.PI) / 180)));
+
+/** The intro only plays once per visit; coming back from the next screen is quicker. */
+let introPlayed = false;
 
 /**
- * Screen 1 as a little planet. Spin it, tap a state. When Tamil Nadu is tapped the planet
- * turns it to face you and the camera flies down until the state fills the screen.
+ * Screen 1 as a painted globe, in the style of a soft storybook. It starts in space, glides
+ * down and settles over the five southern states. Drag to look around, tap a state to fly in.
  */
-export function PlanetMap() {
+export function PlanetMap({ onFail }: { onFail: () => void }) {
   const { t, tr } = useLang();
   const router = useRouter();
   const [picked, setPicked] = useState<string | null>(null);
@@ -89,6 +115,8 @@ export function PlanetMap() {
   const api = useRef<{ choose: (i: number) => void } | null>(null);
   const soonRef = useRef(setSoon);
   soonRef.current = setSoon;
+  const failRef = useRef(onFail);
+  failRef.current = onFail;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -96,67 +124,153 @@ export function PlanetMap() {
     if (!canvas || !box) return;
     const gl = (canvas.getContext('webgl', { antialias: true, alpha: true, premultipliedAlpha: false }) ||
       canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
-    if (!gl) return;
+    if (!gl) {
+      failRef.current();
+      return;
+    }
+    {
+      // size the canvas before any GPU uploads (resizing afterwards stalls some software GL drivers)
+      const r0 = box.getBoundingClientRect();
+      const d0 = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.max(1, Math.round(r0.width * d0));
+      canvas.height = Math.max(1, Math.round(r0.height * d0));
+    }
 
-    const mesh = buildPlanet(planetLabels);
     const compile = (type: number, src: string) => {
       const sh = gl.createShader(type)!;
       gl.shaderSource(sh, src);
       gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh) || 'shader');
       return sh;
     };
-    const prog = gl.createProgram()!;
-    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
-    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
-    gl.linkProgram(prog);
+    let prog: WebGLProgram;
+    try {
+      prog = gl.createProgram()!;
+      gl.attachShader(prog, compile(gl.VERTEX_SHADER, VERT));
+      gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FRAG));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('link');
+    } catch {
+      failRef.current();
+      return;
+    }
     gl.useProgram(prog);
     const loc = (n: string) => gl.getUniformLocation(prog, n);
-    const U = { proj: loc('uProj'), view: loc('uView'), model: loc('uModel'), rot: loc('uRot'), hover: loc('uHover'), hoverT: loc('uHoverT'), light: loc('uLight') };
-    const upload = (data: Float32Array) => {
-      const buf = gl.createBuffer()!;
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
-      return buf;
+    const U = {
+      proj: loc('uProj'), view: loc('uView'), model: loc('uModel'), rot: loc('uRot'), tex: loc('uTex'), id: loc('uId'),
+      mode: loc('uMode'), light: loc('uLight'), hoverId: loc('uHoverId'), hoverT: loc('uHoverT'), glow: loc('uGlow'),
     };
-    const planetBuf = upload(mesh.planet.data);
-    const cloudBuf = upload(mesh.clouds.data);
-    const bind = (buf: WebGLBuffer) => {
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      const stride = 40;
-      [['aPos', 3, 0], ['aNor', 3, 12], ['aCol', 3, 24], ['aState', 1, 36]].forEach(([name, size, off]) => {
-        const a = gl.getAttribLocation(prog, name as string);
-        gl.enableVertexAttribArray(a);
-        gl.vertexAttribPointer(a, size as number, gl.FLOAT, false, stride, off as number);
-      });
+
+    /* painted textures */
+    const makeCanvas = (w: number, h: number) => {
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      return c;
+    };
+    const maxTex = gl.getParameter(gl.MAX_TEXTURE_SIZE) as number;
+    const patchSize = Math.min(2048, maxTex);
+    const globeC = makeCanvas(2048, 1024);
+    const patchC = makeCanvas(patchSize, patchSize);
+    const idC = makeCanvas(1024, 1024);
+    const cloudC = makeCanvas(2048, 1024);
+    paintGlobe(globeC);
+    paintPatch(patchC);
+    paintIds(idC);
+    paintClouds(cloudC);
+    const texture = (c: HTMLCanvasElement, repeat: boolean, nearest = false, mips = true) => {
+      const tx = gl.createTexture()!;
+      gl.bindTexture(gl.TEXTURE_2D, tx);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, c);
+      const pot = (c.width & (c.width - 1)) === 0 && (c.height & (c.height - 1)) === 0;
+      if (mips && pot && !nearest) {
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      } else gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, nearest ? gl.NEAREST : gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, nearest ? gl.NEAREST : gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, repeat && pot ? gl.REPEAT : gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      return tx;
+    };
+    const texGlobe = texture(globeC, true);
+    const texPatch = texture(patchC, false);
+    const texId = texture(idC, false, true, false);
+    const texCloud = texture(cloudC, true);
+
+    const upload = (m: GeoMesh) => {
+      const vb = gl.createBuffer()!;
+      gl.bindBuffer(gl.ARRAY_BUFFER, vb);
+      gl.bufferData(gl.ARRAY_BUFFER, m.vertices, gl.STATIC_DRAW);
+      const ib = gl.createBuffer()!;
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, m.indices, gl.STATIC_DRAW);
+      return { vb, ib, count: m.indices.length };
+    };
+    const meshGlobe = upload(sphereMesh(1));
+    const meshPatch = upload(patchMesh(1.0007));
+    const meshCloud = upload(sphereMesh(1.016, 96, 48));
+    const meshGlow = upload(sphereMesh(1.09, 64, 32));
+    const aPos = gl.getAttribLocation(prog, 'aPos');
+    const aUv = gl.getAttribLocation(prog, 'aUv');
+    gl.enableVertexAttribArray(aPos);
+    gl.enableVertexAttribArray(aUv);
+    const draw = (m: { vb: WebGLBuffer; ib: WebGLBuffer; count: number }, tex: WebGLTexture | null, mode: number) => {
+      gl.bindBuffer(gl.ARRAY_BUFFER, m.vb);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.ib);
+      gl.vertexAttribPointer(aPos, 3, gl.FLOAT, false, 20, 0);
+      gl.vertexAttribPointer(aUv, 2, gl.FLOAT, false, 20, 12);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.uniform1i(U.tex, 0);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, texId);
+      gl.uniform1i(U.id, 1);
+      gl.uniform1f(U.mode, mode);
+      gl.drawElements(gl.TRIANGLES, m.count, gl.UNSIGNED_SHORT, 0);
     };
     gl.enable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.clearColor(0, 0, 0, 0);
-    gl.uniform3fv(U.light, new Float32Array(norm([-0.55, 0.65, 0.75])));
+    gl.uniform3fv(U.light, new Float32Array(norm([-0.45, 0.55, 0.75])));
 
-    /* planet orientation */
-    // The land is turned to face the viewer, then tipped a little so the planet looks round.
-    const base: Quat = qNorm(qMul(qAxis([1, 0, 0], 0.16), qFromTo(mapToDir(285, 385), [0, 0, 1])));
-    let q: Quat = base;
+    /* camera state */
+    const homeQ = faceTo(HOME.lon, HOME.lat, 0);
+    let q: Quat = homeQ;
+    let dist = HOME_DIST;
     let interacted = false;
+    let lastTouch = 0;
     let vel: [number, number] = [0, 0];
-    let dist = DIST;
     let hover = -1;
     let hoverT = 0;
     let hoverTarget = 0;
-    let fly: null | { start: number; q0: Quat; q1: Quat; state: number } = null;
-    const TOTAL = 2500;
+    let intro: null | { start: number; dur: number; q0: Quat; d0: number } = null;
+    let fly: null | { start: number; q0: Quat; q1: Quat; d0: number; state: number } = null;
+    const FLY = 2700;
     let w = 1;
     let h = 1;
     let raf = 0;
     let visible = true;
+    const t0 = performance.now();
+    if (!introPlayed) {
+      intro = { start: t0, dur: 5200, q0: faceTo(22, 18, 0.55), d0: SPACE };
+      q = intro.q0;
+      dist = SPACE;
+    } else {
+      intro = { start: t0, dur: 1100, q0: faceTo(HOME.lon - 6, HOME.lat + 3, 0.2), d0: 1.9 };
+      q = intro.q0;
+      dist = 1.9;
+    }
 
     const resize = () => {
       const r = box.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = Math.max(1, Math.round(r.width));
       h = Math.max(1, Math.round(r.height));
-      canvas.width = Math.round(w * dpr);
-      canvas.height = Math.round(h * dpr);
+      const cw = Math.round(w * dpr);
+      const ch = Math.round(h * dpr);
+      if (canvas.width !== cw) canvas.width = cw;
+      if (canvas.height !== ch) canvas.height = ch;
       gl.viewport(0, 0, canvas.width, canvas.height);
     };
     resize();
@@ -169,26 +283,27 @@ export function PlanetMap() {
       const ny = -(((clientY - r.top) / r.height) * 2 - 1);
       const th = Math.tan(FOV / 2);
       const d = norm([nx * (r.width / r.height) * th, ny * th, -1]);
-      const o: V3 = [0, 0, dist];
-      const b = o[2] * d[2];
-      const c = o[2] * o[2] - 1.04 * 1.04;
+      const b = dist * d[2];
+      const c = dist * dist - 1;
       const disc = b * b - c;
       if (disc < 0) return -1;
       const tt = -b - Math.sqrt(disc);
-      const p: V3 = [o[0] + tt * d[0], o[1] + tt * d[1], o[2] + tt * d[2]];
-      return stateAt(norm(qRotate(qConj(q), p)));
+      const p: V3 = [tt * d[0], tt * d[1], dist + tt * d[2]];
+      const [lon, lat] = lonLatOf(norm(qRotate(qConj(q), p)));
+      return stateAtLonLat(lon, lat);
     };
 
-    /* pointer: drag to spin, tap to choose */
-    let down: null | { x: number; y: number; time: number; moved: number; lx: number; ly: number } = null;
+    /* pointer: drag to look around, tap to choose */
+    let down: null | { time: number; moved: number; lx: number; ly: number } = null;
     const onDown = (e: PointerEvent) => {
       if (fly) return;
+      if (intro) intro.start = performance.now() - intro.dur; // a touch skips to the end
       canvas.setPointerCapture(e.pointerId);
-      down = { x: e.clientX, y: e.clientY, time: performance.now(), moved: 0, lx: e.clientX, ly: e.clientY };
+      down = { time: performance.now(), moved: 0, lx: e.clientX, ly: e.clientY };
       vel = [0, 0];
     };
     const onMove = (e: PointerEvent) => {
-      if (fly) return;
+      if (fly || intro) return;
       if (down) {
         const dx = e.clientX - down.lx;
         const dy = e.clientY - down.ly;
@@ -197,7 +312,8 @@ export function PlanetMap() {
         down.moved += Math.abs(dx) + Math.abs(dy);
         if (down.moved > 6) {
           interacted = true;
-          const k = 0.0075;
+          lastTouch = performance.now();
+          const k = (2 * Math.tan(FOV / 2) * (dist - 0.9)) / Math.max(h, 1);
           vel = [dx * k, dy * k];
           q = qNorm(qMul(qMul(qAxis([0, 1, 0], dx * k), qAxis([1, 0, 0], dy * k)), q));
         }
@@ -212,7 +328,7 @@ export function PlanetMap() {
       if (!down) return;
       const tap = down.moved <= 6 && performance.now() - down.time < 600;
       down = null;
-      if (tap) {
+      if (tap && !intro) {
         const s = pick(e.clientX, e.clientY);
         if (s >= 0) choose(s);
       }
@@ -232,18 +348,18 @@ export function PlanetMap() {
       if (!st.available) {
         hoverTarget = 1;
         soonRef.current(st);
-        window.setTimeout(() => (hoverTarget = 0), 700);
+        window.setTimeout(() => (hoverTarget = 0), 800);
         return;
       }
       soonRef.current(null);
       setPicked(st.slug);
       hoverTarget = 1;
-      const q1 = qFromTo(mesh.centerDirs[s], [0, 0, 1]);
-      fly = { start: performance.now(), q0: q, q1, state: s };
+      const [lon, lat] = centers[s];
+      fly = { start: performance.now(), q0: q, q1: faceTo(lon, lat), d0: dist, state: s };
       const wash = washRef.current;
       if (wash) {
         wash.style.background = st.color;
-        wash.animate([{ opacity: 0 }, { opacity: 0, offset: 0.74 }, { opacity: 1 }], { duration: TOTAL, fill: 'forwards' });
+        wash.animate([{ opacity: 0 }, { opacity: 0, offset: 0.76 }, { opacity: 1 }], { duration: FLY, fill: 'forwards' });
       }
       document.documentElement.classList.add('zooming');
     }
@@ -252,8 +368,7 @@ export function PlanetMap() {
     const io = new IntersectionObserver(([en]) => (visible = en.isIntersecting));
     io.observe(box);
 
-    const proj = () => perspective(FOV, w / h, 0.05, 20);
-    let last = performance.now();
+    const labelDirs = labelAt.map(([lon, lat]) => dirOf(lon, lat));
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
       if (!visible && !fly) return;
@@ -262,9 +377,9 @@ export function PlanetMap() {
       const tsec = now / 1000;
 
       if (fly) {
-        const p = clamp01((now - fly.start) / TOTAL);
-        q = qSlerp(fly.q0, fly.q1, ease(clamp01(p / 0.45)));
-        dist = DIST + (1.12 - DIST) * ease(clamp01((p - 0.2) / 0.8));
+        const p = clamp01((now - fly.start) / FLY);
+        q = qSlerp(fly.q0, fly.q1, ease(clamp01(p / 0.4)));
+        dist = fly.d0 + (CLOSE - fly.d0) * ease(clamp01((p - 0.1) / 0.9));
         if (p >= 1) {
           const slug = states[fly.state].slug;
           fly = null;
@@ -272,45 +387,71 @@ export function PlanetMap() {
           router.push(`/${slug}`);
           return;
         }
+      } else if (intro) {
+        const p = clamp01((now - intro.start) / intro.dur);
+        q = qSlerp(intro.q0, homeQ, ease(clamp01(p / 0.92)));
+        dist = intro.d0 + (HOME_DIST - intro.d0) * ease(p);
+        if (p >= 1) {
+          intro = null;
+          introPlayed = true;
+          q = homeQ;
+          dist = HOME_DIST;
+        }
       } else if (!interacted) {
-        q = qNorm(qMul(qMul(qAxis([0, 1, 0], Math.sin(tsec * 0.45) * 0.2), qAxis([1, 0, 0], Math.sin(tsec * 0.33) * 0.05)), base));
+        const sway = qMul(qAxis([0, 1, 0], Math.sin(tsec * 0.5) * 0.012), qAxis([1, 0, 0], Math.sin(tsec * 0.37) * 0.008));
+        q = qNorm(qMul(sway, homeQ));
       } else if (!down) {
         q = qNorm(qMul(qMul(qAxis([0, 1, 0], vel[0]), qAxis([1, 0, 0], vel[1])), q));
-        vel = [vel[0] * 0.94, vel[1] * 0.94];
+        vel = [vel[0] * 0.92, vel[1] * 0.92];
+        // after a rest, drift gently back over the five states
+        if (now - lastTouch > 3500) {
+          q = qSlerp(q, homeQ, Math.min(1, dt * 1.6));
+          if (Math.abs(q[0] - homeQ[0]) + Math.abs(q[1] - homeQ[1]) + Math.abs(q[2] - homeQ[2]) < 0.002) interacted = false;
+        }
       }
       hoverT += (hoverTarget - hoverT) * Math.min(1, dt * 10);
 
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      gl.uniformMatrix4fv(U.proj, false, proj());
+      gl.uniformMatrix4fv(U.proj, false, perspective(FOV, w / h, 0.004, 30));
       gl.uniformMatrix4fv(U.view, false, translation(0, 0, -dist));
-      gl.uniform1f(U.hover, hover);
+      gl.uniform1f(U.hoverId, hover >= 0 ? 40 * (hover + 1) : -100);
       gl.uniform1f(U.hoverT, hoverT);
+      gl.uniform1f(U.glow, clamp01((dist - 1.75) / 1.2));
       gl.uniformMatrix4fv(U.model, false, mat4FromQuat(q));
       gl.uniformMatrix3fv(U.rot, false, mat3FromQuat(q));
-      bind(planetBuf);
-      gl.drawArrays(gl.TRIANGLES, 0, mesh.planet.vertexCount);
+      gl.depthMask(true);
+      draw(meshGlobe, texGlobe, 0);
+      gl.enable(gl.POLYGON_OFFSET_FILL);
+      gl.polygonOffset(-2, -2);
+      draw(meshPatch, texPatch, 1);
+      gl.disable(gl.POLYGON_OFFSET_FILL);
       /* clouds drift slowly on their own */
-      const cq = qNorm(qMul(qAxis([0.2, 1, 0.1], tsec * 0.08), q));
-      gl.uniform1f(U.hover, -9);
+      gl.depthMask(false);
+      const cq = qNorm(qMul(qAxis([0, 1, 0], tsec * 0.02), q));
       gl.uniformMatrix4fv(U.model, false, mat4FromQuat(cq));
       gl.uniformMatrix3fv(U.rot, false, mat3FromQuat(cq));
-      bind(cloudBuf);
-      gl.drawArrays(gl.TRIANGLES, 0, mesh.clouds.vertexCount);
+      draw(meshCloud, texCloud, 2);
+      gl.uniformMatrix4fv(U.model, false, mat4FromQuat(q));
+      gl.uniformMatrix3fv(U.rot, false, mat3FromQuat(q));
+      if (dist > 1.75) draw(meshGlow, null, 3);
 
-      /* names follow their states around the planet */
+      /* names are painted on the map: they follow their state and fade in once we are close */
       const th = Math.tan(FOV / 2);
-      mesh.labelDirs.forEach((dir, i) => {
+      const near = fly ? 0 : clamp01((2.6 - dist) / 0.9);
+      labelDirs.forEach((dir, i) => {
         const el = labelRefs.current[i];
         if (!el) return;
-        const wp = qRotate(q, [dir[0] * 1.1, dir[1] * 1.1, dir[2] * 1.1]);
-        const facing = qRotate(q, dir)[2];
+        const wp = qRotate(q, dir);
+        const toCam: V3 = [-wp[0], -wp[1], dist - wp[2]];
+        const facing = (wp[0] * toCam[0] + wp[1] * toCam[1] + wp[2] * toCam[2]) / Math.hypot(...toCam);
         const depth = dist - wp[2];
         const sx = (wp[0] / (depth * th * (w / h))) * 0.5 * w + w / 2;
         const sy = (-wp[1] / (depth * th)) * 0.5 * h + h / 2;
         el.style.transform = `translate(${sx}px, ${sy}px) translate(-50%, -50%)`;
-        el.style.opacity = fly ? '0' : String(clamp01((facing - 0.15) * 5));
+        el.style.opacity = String(near * clamp01((facing - 0.1) * 6));
       });
     };
+    let last = performance.now();
     raf = requestAnimationFrame(frame);
 
     return () => {
@@ -322,22 +463,18 @@ export function PlanetMap() {
       canvas.removeEventListener('pointerup', onUp);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
     };
-    // The planet is built once; later changes go through refs.
+    // The globe is built once; later changes go through refs.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className={`mapStage planetStage${picked ? ' picking' : ''}`}>
       <div className="planetBox" ref={boxRef}>
-        <div className="skyClouds" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </div>
+        <div className="sparkles" aria-hidden="true" />
         <canvas ref={canvasRef} className="planetCanvas" role="img" aria-label={t(ui.mapAria)} />
         <div className="mapLabels" aria-hidden="true">
           {states.map((s, i) => (
-            <span key={s.slug} ref={(el) => { labelRefs.current[i] = el; }} className={`mapLabel planetLabel${s.available ? ' open' : ''}`}>
+            <span key={s.slug} ref={(el) => { labelRefs.current[i] = el; }} className="geoLabel">
               <b>{s.name}</b>
               <i lang={s.localLang}>{s.local}</i>
               {s.available ? <em>{t(ui.openNow)}</em> : null}
@@ -346,11 +483,11 @@ export function PlanetMap() {
         </div>
       </div>
       <div className="wash" ref={washRef} aria-hidden="true" />
-      <ul className="stateButtons" aria-label={t(ui.chooseState)}>
+      <ul className="srOnly" aria-label={t(ui.chooseState)}>
         {states.map((s, i) => (
           <li key={s.slug}>
-            <button type="button" onClick={() => api.current?.choose(i)} style={{ borderColor: s.color }}>
-              {s.name}
+            <button type="button" onClick={() => api.current?.choose(i)}>
+              {s.name} {s.available ? '' : `(${t(ui.comingSoon)})`}
             </button>
           </li>
         ))}

@@ -28,7 +28,7 @@ export const ui = {
   searchButton: { en: 'Search', ta: 'தேடு' },
   mapPrompt: { en: 'Tap your state on the map', ta: 'வரைபடத்தில் உங்கள் மாநிலத்தைத் தொடுங்கள்' },
   mapAria: { en: 'Map of South India. Choose your state.', ta: 'தென்னிந்திய வரைபடம். உங்கள் மாநிலத்தைத் தேர்ந்தெடுக்கவும்.' },
-  planetHint: { en: 'Drag to spin the planet. Tap a state.', ta: 'கோளத்தை இழுத்துச் சுழற்றுங்கள். மாநிலத்தைத் தொடுங்கள்.' },
+  planetHint: { en: 'Drag to look around. Tap a state.', ta: 'இழுத்துப் பாருங்கள். மாநிலத்தைத் தொடுங்கள்.' },
   openNow: { en: 'Open now', ta: 'இப்போது கிடைக்கிறது' },
   soonNote: { en: '{state} is coming soon. Tamil Nadu is open now.', ta: '{state} விரைவில் வரும். தமிழ்நாடு இப்போது கிடைக்கிறது.' },
   legendOpen: { en: 'Open now', ta: 'இப்போது கிடைக்கிறது' },
