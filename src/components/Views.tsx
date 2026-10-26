@@ -12,14 +12,19 @@ import { useCurtain } from '@/lib/curtain';
 import { mapShapes, mapViewBox } from '@/data/southMap';
 import { Character } from './Characters';
 import { StateMap } from './StateMap';
+import { PlanetMap, webglWorks } from './PlanetMap';
 import { WalkOut, type WalkStart } from './WalkOut';
 import { BackButton, BackLink, LevelTag, PlaceTag, RichText, SchemeCard, SearchBar } from './Parts';
 
 /* Screen 1: welcome, search and choose a state on the map */
 export function WelcomeView() {
   const { t } = useLang();
+  // Start with an empty frame, then show the 3D planet, or the flat map on devices that cannot draw 3D.
+  const [view, setView] = useState<'wait' | 'planet' | 'flat'>('wait');
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setView(!calm && webglWorks() ? 'planet' : 'flat');
   }, []);
   return (
     <div className="page welcome">
@@ -29,7 +34,7 @@ export function WelcomeView() {
         <SearchBar />
         <h2 className="mapTitle">{t(ui.chooseState)}</h2>
       </div>
-      <StateMap />
+      {view === 'planet' ? <PlanetMap /> : view === 'flat' ? <StateMap /> : <div className="mapStage"><div className="planetBox" /></div>}
     </div>
   );
 }

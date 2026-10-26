@@ -8,7 +8,7 @@ import { states, type StateInfo } from '@/data/config';
 import { mapShapes, mapViewBox } from '@/data/southMap';
 
 /** Where each name sits on the map, in map units. Kerala is narrow, so its name sits in the sea. */
-const labelAt: Record<string, { x: number; y: number }> = {
+export const labelAt: Record<string, { x: number; y: number }> = {
   'tamil-nadu': { x: 250, y: 560 },
   kerala: { x: 112, y: 596 },
   karnataka: { x: 140, y: 300 },
