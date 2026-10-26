@@ -1,99 +1,126 @@
 import type { ReactNode } from 'react';
 
 /**
- * Original anime-style characters, drawn as SVG. Every character is an invented person,
- * not taken from any existing film, series or game.
+ * Original characters in a soft, hand-painted storybook style: muted earthy colours,
+ * thin soft lines, small calm eyes and gentle shading. Every character is an invented
+ * person, not taken from any existing film, series or game.
  * Parts are grouped (arm-l, arm-r, leg-l, leg-r) so CSS can make them walk and raise a hand.
  */
 export type CharacterKind = 'msme' | 'farmer' | 'home' | 'student' | 'woman';
 
 export const skinTones: Record<CharacterKind, string> = {
-  msme: '#D99A6C',
-  farmer: '#B8764B',
-  home: '#E0AD82',
-  student: '#D8A07A',
-  woman: '#E3B088',
+  msme: '#D9A27C',
+  farmer: '#B97F58',
+  home: '#E3B590',
+  student: '#DFAA85',
+  woman: '#E6B58F',
 };
 
-const OUT = '#2B1A33';
+/** Soft line colour used instead of black outlines. */
+const LINE = 'rgba(70, 42, 38, 0.5)';
+const DARK = '#2E2024';
 
-/** A thick rounded line with a dark outline, used for arms and legs. */
+/** An arm or leg: a soft outline under a plain colour. */
 function Limb({ d, w, color }: { d: string; w: number; color: string }) {
   return (
     <>
-      <path d={d} stroke={OUT} strokeWidth={w + 3} strokeLinecap="round" fill="none" />
+      <path d={d} stroke={LINE} strokeWidth={w + 1.2} strokeLinecap="round" fill="none" />
       <path d={d} stroke={color} strokeWidth={w} strokeLinecap="round" fill="none" />
     </>
   );
 }
 
-function Face({ skin, iris, brow, moustache }: { skin: string; iris: string; brow: string; moustache?: string }) {
+function Face({
+  skin,
+  hair,
+  lashes,
+  moustache,
+  glasses,
+}: {
+  skin: string;
+  hair: string;
+  lashes?: boolean;
+  moustache?: boolean;
+  glasses?: boolean;
+}) {
   return (
     <g>
-      <ellipse cx="34" cy="53" rx="4" ry="6" fill={skin} stroke={OUT} strokeWidth="1.6" />
-      <ellipse cx="86" cy="53" rx="4" ry="6" fill={skin} stroke={OUT} strokeWidth="1.6" />
+      <ellipse cx="43" cy="35" rx="2.6" ry="4" fill={skin} stroke={LINE} strokeWidth="0.8" />
+      <ellipse cx="77" cy="35" rx="2.6" ry="4" fill={skin} stroke={LINE} strokeWidth="0.8" />
       <path
-        d="M34 47 C34 27 46 21 60 21 C74 21 86 27 86 47 C86 66 75 80 60 80 C45 80 34 66 34 47Z"
+        d="M43.5 32 C43.5 20 50 14 60 14 C70 14 76.5 20 76.5 32 C76.5 44 70 54 60 54 C50 54 43.5 44 43.5 32Z"
         fill={skin}
-        stroke={OUT}
-        strokeWidth="1.8"
+        stroke={LINE}
+        strokeWidth="0.9"
       />
-      {[48.5, 71.5].map((cx, i) => (
+      <path d="M46 44 C50 52 56 54 60 54 C55 52 49 49 46 44Z" fill="#000" opacity="0.06" />
+      {[53.2, 66.8].map((cx, i) => (
         <g key={cx}>
-          <ellipse cx={cx} cy="52" rx="7.6" ry="9.6" fill="#fff" stroke={OUT} strokeWidth="1" />
-          <ellipse cx={cx} cy="53.5" rx="5.7" ry="8" fill={iris} />
-          <ellipse cx={cx} cy="54" rx="2.8" ry="4.6" fill="#1A1020" />
-          <circle cx={cx - 2.4} cy="49.2" r="2.3" fill="#fff" />
-          <circle cx={cx + 2.2} cy="57.4" r="1.1" fill="#fff" />
-          <path
-            d={i === 0 ? 'M40.4 49 Q48.5 40.5 56.4 48.6' : 'M63.6 48.6 Q71.5 40.5 79.6 49'}
-            stroke={OUT}
-            strokeWidth="2.6"
-            fill="none"
-            strokeLinecap="round"
-          />
-          <path d={i === 0 ? 'M40.6 49 l-2.6 -2' : 'M79.4 49 l2.6 -2'} stroke={OUT} strokeWidth="2" strokeLinecap="round" />
+          <ellipse cx={cx} cy="35.5" rx="2.1" ry="2.9" fill={DARK} />
+          <circle cx={cx - 0.7} cy="34.4" r="0.8" fill="#fff" />
+          {lashes ? <path d={i === 0 ? 'M50.2 33.6 Q53.2 31.2 56 33.2' : 'M64 33.2 Q66.8 31.2 69.8 33.6'} stroke={DARK} strokeWidth="1.1" fill="none" strokeLinecap="round" /> : null}
         </g>
       ))}
-      <path d="M41 39.5 Q48 35.5 55 38.5" stroke={brow} strokeWidth="2.3" fill="none" strokeLinecap="round" />
-      <path d="M65 38.5 Q72 35.5 79 39.5" stroke={brow} strokeWidth="2.3" fill="none" strokeLinecap="round" />
-      <path d="M59.4 61 q-1.6 3 1.2 3.6" stroke={OUT} strokeOpacity="0.5" strokeWidth="1.3" fill="none" strokeLinecap="round" />
-      <path d="M53.5 69.5 Q60 76 66.5 69.5" stroke={OUT} strokeWidth="2" fill="#B8434F" strokeLinejoin="round" />
-      <ellipse cx="40.5" cy="64" rx="5" ry="2.7" fill="#FF6F7F" opacity="0.38" />
-      <ellipse cx="79.5" cy="64" rx="5" ry="2.7" fill="#FF6F7F" opacity="0.38" />
-      {moustache ? (
-        <path d="M49 67 Q55 61.5 60 65 Q65 61.5 71 67 Q65 66.8 60 67.6 Q55 66.8 49 67Z" fill={moustache} stroke={OUT} strokeWidth="1" />
+      <path d="M49.6 29.6 Q53.2 27.6 56.6 29.2" stroke={hair} strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.8" />
+      <path d="M63.4 29.2 Q66.8 27.6 70.4 29.6" stroke={hair} strokeWidth="1" fill="none" strokeLinecap="round" opacity="0.8" />
+      {glasses ? (
+        <g fill="#fff" fillOpacity="0.18" stroke="#6B4A33" strokeWidth="1.1">
+          <circle cx="53.2" cy="35.5" r="5.6" />
+          <circle cx="66.8" cy="35.5" r="5.6" />
+          <path d="M58.8 35 Q60 34 61.2 35" fill="none" />
+        </g>
       ) : null}
+      <path d="M59.6 40.2 q-1.1 2.2 0.9 2.5" stroke={LINE} strokeWidth="0.9" fill="none" strokeLinecap="round" />
+      <path d="M56.6 46.4 Q60 48.8 63.4 46.4" stroke="#A04F4B" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      <ellipse cx="49" cy="42" rx="3.6" ry="2.2" fill="#E8806F" opacity="0.28" />
+      <ellipse cx="71" cy="42" rx="3.6" ry="2.2" fill="#E8806F" opacity="0.28" />
+      {moustache ? <path d="M53.5 43.6 Q57 41.4 60 43 Q63 41.4 66.5 43.6 Q63 44.2 60 44 Q57 44.2 53.5 43.6Z" fill={hair} /> : null}
     </g>
   );
 }
 
 const Neck = ({ skin }: { skin: string }) => (
   <g>
-    <rect x="53" y="76" width="14" height="14" rx="4" fill={skin} stroke={OUT} strokeWidth="1.6" />
-    <path d="M53.8 79 Q60 86 66.2 79 L66.2 84 Q60 90 53.8 84Z" fill="#000" opacity="0.12" />
+    <path d="M56 52 L56 63 Q60 66 64 63 L64 52Z" fill={skin} stroke={LINE} strokeWidth="0.8" />
+    <path d="M56.4 54 Q60 59 63.6 54 L63.6 58 Q60 63 56.4 58Z" fill="#000" opacity="0.1" />
   </g>
 );
 
-/** Both legs. Skin or trouser colour, plus shoes (or bare feet). */
-function Legs({ leg, sock, shoe, barefoot, skin }: { leg: string; sock?: string; shoe: string; barefoot?: boolean; skin: string }) {
+function Legs({
+  leg,
+  sock,
+  shoe,
+  barefoot,
+  skin,
+}: {
+  leg: string;
+  sock?: string;
+  shoe: string;
+  barefoot?: boolean;
+  skin: string;
+}) {
   return (
     <>
       {(
         [
-          ['leg-l', 52],
-          ['leg-r', 68],
+          ['leg-l', 54],
+          ['leg-r', 66],
         ] as [string, number][]
       ).map(([cls, x]) => (
-        <g key={cls} className={`ch-${cls}`} style={{ transformOrigin: `${x}px 138px` }}>
-          <Limb d={`M${x} 140 L${x} 176`} w={13} color={leg} />
-          {sock ? <Limb d={`M${x} 168 L${x} 180`} w={11} color={sock} /> : null}
+        <g key={cls} className={`ch-${cls}`} style={{ transformOrigin: `${x}px 116px` }}>
+          <Limb d={`M${x} 118 L${x} 178`} w={9.5} color={leg} />
+          {sock ? <Limb d={`M${x} 168 L${x} 180`} w={8.4} color={sock} /> : null}
           {barefoot ? (
-            <ellipse cx={x} cy="190" rx="8.5" ry="4.6" fill={skin} stroke={OUT} strokeWidth="1.6" />
+            <ellipse cx={x} cy="186" rx="6.4" ry="3.2" fill={skin} stroke={LINE} strokeWidth="0.9" />
           ) : (
             <>
-              <ellipse cx={x} cy="190" rx="10" ry="5.4" fill={shoe} stroke={OUT} strokeWidth="1.6" />
-              <ellipse cx={x - 2} cy="188.4" rx="4" ry="1.6" fill="#fff" opacity="0.35" />
+              <path
+                d={`M${x - 5.6} 181 L${x + 5.6} 181 Q${x + 9} 183 ${x + 8} 187 Q${x} 190 ${x - 6} 187Z`}
+                fill={shoe}
+                stroke={LINE}
+                strokeWidth="0.9"
+                strokeLinejoin="round"
+              />
             </>
           )}
         </g>
@@ -105,321 +132,341 @@ function Legs({ leg, sock, shoe, barefoot, skin }: { leg: string; sock?: string;
 function Arms({
   sleeve,
   skin,
-  sleeveLong = false,
+  sleeveEnd = 92,
   left,
   right,
 }: {
   sleeve: string;
   skin: string;
-  sleeveLong?: boolean;
+  /** How far down the arm the sleeve reaches. */
+  sleeveEnd?: number;
   left?: ReactNode;
   right?: ReactNode;
 }) {
-  const forearmStart = sleeveLong ? 140 : 126;
   return (
     <>
-      <g className="ch-arm-l" style={{ transformOrigin: '40px 92px' }}>
-        <Limb d="M40 93 L33 133" w={9} color={skin} />
-        <Limb d={`M40 93 L${40 - (7 * (forearmStart - 93)) / 40} ${forearmStart}`} w={12} color={sleeve} />
-        <circle cx="32" cy="138" r="6" fill={skin} stroke={OUT} strokeWidth="1.6" />
+      <g className="ch-arm-l" style={{ transformOrigin: '44px 66px' }}>
+        <Limb d="M44 67 Q39 92 39.5 116" w={6.2} color={skin} />
+        <Limb d={`M44 67 Q40.6 ${sleeveEnd - 14} 40.3 ${sleeveEnd}`} w={9.4} color={sleeve} />
+        <circle cx="39.5" cy="119.5" r="4.4" fill={skin} stroke={LINE} strokeWidth="0.9" />
         {left}
       </g>
-      <g className="ch-arm-r" style={{ transformOrigin: '80px 92px' }}>
-        <Limb d="M80 93 L87 133" w={9} color={skin} />
-        <Limb d={`M80 93 L${80 + (7 * (forearmStart - 93)) / 40} ${forearmStart}`} w={12} color={sleeve} />
-        <circle cx="88" cy="138" r="6" fill={skin} stroke={OUT} strokeWidth="1.6" />
+      <g className="ch-arm-r" style={{ transformOrigin: '76px 66px' }}>
+        <Limb d="M76 67 Q81 92 80.5 116" w={6.2} color={skin} />
+        <Limb d={`M76 67 Q79.4 ${sleeveEnd - 14} 79.7 ${sleeveEnd}`} w={9.4} color={sleeve} />
+        <circle cx="80.5" cy="119.5" r="4.4" fill={skin} stroke={LINE} strokeWidth="0.9" />
         {right}
-        <circle className="ch-hand" cx="88" cy="140" r="3" fill="none" />
+        <circle className="ch-hand" cx="80.5" cy="121" r="3" fill="none" />
       </g>
     </>
   );
 }
 
-export function Character({ kind, walking = false, raised = false }: { kind: CharacterKind; walking?: boolean; raised?: boolean }) {
+/** Soft shading over a garment, darker on the right side, like light from the left. */
+const Shade = ({ d }: { d: string }) => <path d={d} fill="url(#chShade)" />;
+
+export function Character({
+  kind,
+  walking = false,
+  raised = false,
+}: {
+  kind: CharacterKind;
+  walking?: boolean;
+  raised?: boolean;
+}) {
   const skin = skinTones[kind];
   const cls = `ch${walking ? ' walking' : ''}${raised ? ' raised' : ''}`;
   return (
     <svg className={cls} viewBox="0 0 120 210" role="img" aria-hidden="true" focusable="false">
-      <ellipse className="ch-shadow" cx="60" cy="198" rx="30" ry="5" fill="#000" opacity="0.14" />
-      <g className="ch-body">
-        {kind === 'msme' ? <Msme skin={skin} /> : null}
-        {kind === 'farmer' ? <Farmer skin={skin} /> : null}
-        {kind === 'home' ? <Home skin={skin} /> : null}
-        {kind === 'student' ? <Student skin={skin} /> : null}
-        {kind === 'woman' ? <Woman skin={skin} /> : null}
+      <defs>
+        <linearGradient id="chShade" x1="0" y1="0" x2="1" y2="0.3">
+          <stop offset="0" stopColor="#fff" stopOpacity="0.12" />
+          <stop offset="0.55" stopColor="#000" stopOpacity="0" />
+          <stop offset="1" stopColor="#2a1020" stopOpacity="0.2" />
+        </linearGradient>
+        <filter id="chPaint" x="-5%" y="-5%" width="110%" height="110%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="7" result="n" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" />
+        </filter>
+      </defs>
+      <ellipse className="ch-shadow" cx="60" cy="192" rx="28" ry="4.2" fill="#3a2418" opacity="0.16" />
+      <g filter="url(#chPaint)">
+        <g className="ch-body">
+          {kind === 'msme' ? <Msme skin={skin} /> : null}
+          {kind === 'farmer' ? <Farmer skin={skin} /> : null}
+          {kind === 'home' ? <Home skin={skin} /> : null}
+          {kind === 'student' ? <Student skin={skin} /> : null}
+          {kind === 'woman' ? <Woman skin={skin} /> : null}
+        </g>
       </g>
     </svg>
   );
 }
 
+const TORSO = 'M44 63 Q60 67 76 63 L79 120 Q60 125 41 120Z';
+
 /* ---------- Shopkeeper / small business owner ---------- */
 function Msme({ skin }: { skin: string }) {
-  const hair = '#1B1424';
+  const hair = '#3A2A2C';
   return (
     <>
-      <Legs leg="#F1E6CF" shoe="#7A4528" skin={skin} />
+      <Legs leg="#7C7064" shoe="#6B4A36" skin={skin} />
       <Arms
-        sleeve="#F2B134"
+        sleeve="#EFE3C6"
         skin={skin}
-        sleeveLong
+        sleeveEnd={108}
         left={
-          <g transform="rotate(-8 24 140)">
-            <rect x="12" y="124" width="24" height="30" rx="2.5" fill="#C0392B" stroke={OUT} strokeWidth="1.6" />
-            <rect x="15" y="124" width="2.5" height="30" fill="#8E2A20" />
-            <rect x="20" y="130" width="12" height="3" rx="1.5" fill="#F7D774" />
-            <rect x="20" y="136" width="9" height="2.4" rx="1.2" fill="#F7D774" />
-            <circle cx="33" cy="146" r="6" fill={skin} stroke={OUT} strokeWidth="1.6" />
+          <g transform="rotate(-8 30 124)">
+            <rect x="21" y="110" width="17" height="22" rx="1.8" fill="#B5584B" stroke={LINE} strokeWidth="0.9" />
+            <rect x="22.4" y="110" width="2" height="22" fill="#8C3F36" />
+            <rect x="27" y="116" width="8" height="2" rx="1" fill="#F0D79A" />
+            <rect x="27" y="120" width="6" height="1.6" rx="0.8" fill="#F0D79A" />
+            <circle cx="37.5" cy="124" r="4.2" fill={skin} stroke={LINE} strokeWidth="0.9" />
           </g>
         }
       />
       <g className="ch-garment">
-        <path d="M39 86 Q60 93 81 86 L87 152 Q60 159 33 152Z" fill="#F2B134" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M39 86 L53 90 L55 154 L34 152Z" fill="#27366E" stroke={OUT} strokeWidth="1.6" strokeLinejoin="round" />
-        <path d="M81 86 L67 90 L65 154 L86 152Z" fill="#27366E" stroke={OUT} strokeWidth="1.6" strokeLinejoin="round" />
-        {[102, 114, 126, 138].map((y) => (
-          <circle key={y} cx="60" cy={y} r="1.9" fill="#F7D774" stroke={OUT} strokeWidth="0.8" />
+        <path d="M44 63 Q60 67 76 63 L81 142 Q60 148 39 142Z" fill="#EFE3C6" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M44 63 L55 66 L56 144 L39 142Z" fill="#6F8FA8" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M76 63 L65 66 L64 144 L81 142Z" fill="#6F8FA8" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        {[78, 90, 102, 114].map((y) => (
+          <circle key={y} cx="60" cy={y} r="1.3" fill="#E9CF8A" stroke={LINE} strokeWidth="0.5" />
         ))}
-        <path d="M54 86 Q60 96 66 86" stroke={OUT} strokeWidth="1.6" fill="#F2B134" />
+        <path d="M55 64 Q60 72 65 64" stroke={LINE} strokeWidth="0.9" fill="#EFE3C6" />
+        <Shade d="M44 63 Q60 67 76 63 L81 142 Q60 148 39 142Z" />
       </g>
       <Neck skin={skin} />
-      <Face skin={skin} iris="#5A3B2B" brow={hair} />
+      <Face skin={skin} hair={hair} glasses />
       <path
-        d="M33 47 C31 26 44 13 60 14 C77 13 89 26 87 47 C85 37 81 33 75 31 L71 37 L65 29 L59 36 L53 29 L47 37 C41 33 36 38 33 47Z"
+        d="M42.5 31 C41 16 50 9.5 61 10 C72 9.5 79 17 77.5 31 C75 24 70 20.5 63 20 C56 19.6 48 23 42.5 31Z"
         fill={hair}
-        stroke={OUT}
-        strokeWidth="1.8"
+        stroke={LINE}
+        strokeWidth="0.9"
         strokeLinejoin="round"
       />
-      <path d="M44 22 Q52 17 60 18" stroke="#fff" strokeOpacity="0.28" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+      <path d="M49 15.5 Q57 11.5 66 13" stroke="#fff" strokeOpacity="0.2" strokeWidth="1.8" fill="none" strokeLinecap="round" />
     </>
   );
 }
 
 /* ---------- Farmer ---------- */
 function Farmer({ skin }: { skin: string }) {
-  const hair = '#1B1424';
+  const hair = '#33262A';
   return (
     <>
       <Legs leg={skin} shoe="#000" barefoot skin={skin} />
       <Arms
-        sleeve="#F7F3EA"
+        sleeve="#F2EBDD"
         skin={skin}
-        sleeveLong
+        sleeveEnd={100}
         left={
-          <g transform="rotate(-6 26 140)">
-            {[-8, -4, 0, 4, 8].map((o) => (
+          <g transform="rotate(-5 32 128)">
+            {[-6, -3, 0, 3, 6].map((o) => (
               <g key={o}>
-                <path d={`M${28 + o} 150 L${22 + o * 1.6} 112`} stroke="#C99A2E" strokeWidth="1.6" strokeLinecap="round" />
-                <ellipse cx={22 + o * 1.6} cy="110" rx="2.3" ry="5" fill="#F2C94C" stroke={OUT} strokeWidth="0.9" transform={`rotate(${o * 2} ${22 + o * 1.6} 110)`} />
+                <path d={`M${36 + o * 0.4} 130 Q${30 + o} 116 ${26 + o * 1.8} 98`} stroke="#B89A45" strokeWidth="1.1" strokeLinecap="round" fill="none" />
+                <ellipse cx={26 + o * 1.8} cy="96" rx="1.9" ry="4.4" fill="#E2BE5C" stroke={LINE} strokeWidth="0.6" transform={`rotate(${o * 2.4} ${26 + o * 1.8} 96)`} />
               </g>
             ))}
-            <circle cx="30" cy="141" r="6" fill={skin} stroke={OUT} strokeWidth="1.6" />
-            <path d="M22 146 L38 146" stroke="#D64545" strokeWidth="3" strokeLinecap="round" />
+            <circle cx="38" cy="122" r="4.4" fill={skin} stroke={LINE} strokeWidth="0.9" />
+            <path d="M31 126 L44 124" stroke="#C96A4B" strokeWidth="2.2" strokeLinecap="round" />
           </g>
         }
       />
       <g className="ch-garment">
-        <path d="M39 86 Q60 93 81 86 L85 146 Q60 152 35 146Z" fill="#F7F3EA" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M60 92 L60 146" stroke={OUT} strokeOpacity="0.35" strokeWidth="1.2" />
-        <path d="M44 108 Q50 112 52 124 M76 108 Q70 112 68 124" stroke={OUT} strokeOpacity="0.18" strokeWidth="1.6" fill="none" />
-        {/* gamchha (towel) over the shoulder */}
-        <path d="M68 87 L84 94 L88 128 L78 130 L74 108Z" fill="#D64545" stroke={OUT} strokeWidth="1.6" strokeLinejoin="round" />
-        <path d="M72 96 L85 101 M74 106 L86 111 M75 116 L87 121" stroke="#fff" strokeOpacity="0.75" strokeWidth="1.6" />
-        {/* dhoti */}
-        <path d="M38 138 L82 138 L88 190 Q60 196 32 190Z" fill="#FFFFFF" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M50 142 Q48 166 44 188 M60 142 L60 192 M70 142 Q72 166 76 188" stroke={OUT} strokeOpacity="0.28" strokeWidth="1.4" fill="none" />
-        <path d="M33 184 L87 184" stroke="#E4572E" strokeWidth="3" />
+        <path d="M44 63 Q60 67 76 63 L79 122 Q60 128 41 122Z" fill="#F2EBDD" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M60 70 L60 124" stroke={LINE} strokeWidth="0.8" opacity="0.6" />
+        <path d="M70 64 L82 72 L84 106 L76 108 L73 86Z" fill="#C96A4B" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M73 72 L83 78 M74 84 L84 90 M75 96 L84 101" stroke="#fff" strokeOpacity="0.55" strokeWidth="1.2" />
+        <Shade d="M44 63 Q60 67 76 63 L79 122 Q60 128 41 122Z" />
+        {/* veshti (wrapped cloth) */}
+        <path d="M41 116 L79 116 L85 184 Q60 190 35 184Z" fill="#FBF7EE" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M51 120 Q49 150 45 182 M60 120 L60 188 M69 120 Q71 150 75 182" stroke={LINE} strokeOpacity="0.4" strokeWidth="1" fill="none" />
+        <path d="M36 178 L84 178" stroke="#B5483C" strokeWidth="2.6" />
+        <Shade d="M41 116 L79 116 L85 184 Q60 190 35 184Z" />
       </g>
       <Neck skin={skin} />
-      <Face skin={skin} iris="#3B2418" brow={hair} moustache={hair} />
-      {/* turban */}
+      <Face skin={skin} hair={hair} moustache />
+      {/* head cloth */}
       <path
-        d="M31 42 C30 18 45 6 60 6 C77 6 90 18 89 42 C80 33 70 30 60 30 C50 30 40 33 31 42Z"
-        fill="#F08A24"
-        stroke={OUT}
-        strokeWidth="1.8"
+        d="M41.5 30 C40 14 50 6.5 60 6.5 C70.5 6.5 80 14 78.5 30 C72 23.5 66 21.5 60 21.5 C54 21.5 48 23.5 41.5 30Z"
+        fill="#F4EBD9"
+        stroke={LINE}
+        strokeWidth="0.9"
         strokeLinejoin="round"
       />
-      <path d="M36 36 C46 24 74 24 84 36 M33 28 C46 14 74 14 87 28 M40 18 C52 10 68 10 80 18" stroke="#FFD08A" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.85" />
-      <path d="M86 26 Q104 34 98 58 Q96 46 90 42" fill="#F08A24" stroke={OUT} strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M44 26 C50 16 70 16 76 26 M43 19 C50 10 70 10 77 19" stroke="#C9B994" strokeWidth="1.2" fill="none" strokeLinecap="round" />
+      <path d="M77 17 Q92 22 88 40 Q86 31 80 28Z" fill="#F4EBD9" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
     </>
   );
 }
 
 /* ---------- Home seeker / house owner ---------- */
 function Home({ skin }: { skin: string }) {
-  const hair = '#2A1B14';
+  const hair = '#3C2B28';
   return (
     <>
-      <Legs leg="#3A56C8" shoe="#FFFFFF" skin={skin} />
+      <Legs leg="#C2AE82" shoe="#EDE3CF" skin={skin} />
       <Arms
-        sleeve="#17A2A4"
+        sleeve="#8FB09A"
         skin={skin}
+        sleeveEnd={84}
         left={
-          <g transform="rotate(-6 24 138)">
-            <rect x="9" y="126" width="26" height="18" rx="1.5" fill="#FFF1D6" stroke={OUT} strokeWidth="1.6" />
-            <path d="M5 128 L22 111 L39 128Z" fill="#D94A3B" stroke={OUT} strokeWidth="1.6" strokeLinejoin="round" />
-            <rect x="18" y="134" width="7" height="10" rx="1" fill="#8A5A36" stroke={OUT} strokeWidth="1" />
-            <rect x="11.5" y="130" width="5" height="5" fill="#9ED8F0" stroke={OUT} strokeWidth="0.9" />
-            <rect x="27" y="130" width="5" height="5" fill="#9ED8F0" stroke={OUT} strokeWidth="0.9" />
-            <circle cx="35" cy="142" r="6" fill={skin} stroke={OUT} strokeWidth="1.6" />
+          <g transform="rotate(-5 30 124)">
+            <rect x="19" y="112" width="20" height="14" rx="1.2" fill="#F6EAD0" stroke={LINE} strokeWidth="0.9" />
+            <path d="M15 114 L29 100 L43 114Z" fill="#C4624F" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+            <rect x="26" y="118" width="5.4" height="8" rx="0.8" fill="#8A6244" stroke={LINE} strokeWidth="0.6" />
+            <rect x="20.8" y="115" width="4" height="4" fill="#A9D3E3" stroke={LINE} strokeWidth="0.6" />
+            <rect x="33" y="115" width="4" height="4" fill="#A9D3E3" stroke={LINE} strokeWidth="0.6" />
+            <circle cx="39" cy="124" r="4.2" fill={skin} stroke={LINE} strokeWidth="0.9" />
           </g>
         }
         right={
           <g>
-            <circle cx="95" cy="146" r="3.4" fill="none" stroke="#E5B93A" strokeWidth="1.8" />
-            <path d="M95 149.4 L95 160 M95 156 l3 0 M95 159 l2.4 0" stroke="#E5B93A" strokeWidth="1.8" strokeLinecap="round" />
+            <circle cx="86" cy="127" r="2.5" fill="none" stroke="#D9B04A" strokeWidth="1.4" />
+            <path d="M86 129.5 L86 138 M86 135.4 l2.4 0 M86 137.6 l1.8 0" stroke="#D9B04A" strokeWidth="1.4" strokeLinecap="round" />
           </g>
         }
       />
       <g className="ch-garment">
-        <path d="M39 86 Q60 93 81 86 L83 142 Q60 148 37 142Z" fill="#17A2A4" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M52 86 L60 100 L68 86Z" fill="#fff" stroke={OUT} strokeWidth="1.4" strokeLinejoin="round" />
-        <path d="M60 100 L60 142" stroke={OUT} strokeOpacity="0.35" strokeWidth="1.2" />
-        <path d="M38 138 L82 138 L83 150 Q60 156 37 150Z" fill="#2F46A8" stroke={OUT} strokeWidth="1.6" />
-        <rect x="54" y="139" width="12" height="9" rx="1.5" fill="#E5B93A" stroke={OUT} strokeWidth="1" />
+        <path d="M44 63 Q60 67 76 63 L79 122 Q60 128 41 122Z" fill="#8FB09A" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M54 64 L60 76 L66 64Z" fill="#F2EBDD" stroke={LINE} strokeWidth="0.8" strokeLinejoin="round" />
+        <path d="M60 76 L60 122" stroke={LINE} strokeWidth="0.8" opacity="0.6" />
+        <path d="M41 116 L79 116 L80 126 Q60 132 40 126Z" fill="#A9936A" stroke={LINE} strokeWidth="0.9" />
+        <Shade d="M44 63 Q60 67 76 63 L79 122 Q60 128 41 122Z" />
       </g>
       <Neck skin={skin} />
-      <Face skin={skin} iris="#1C8F9A" brow={hair} />
+      <Face skin={skin} hair={hair} />
       <path
-        d="M32 48 C29 27 41 13 60 13 C79 13 91 27 88 48 C87 40 83 34 79 32 L82 23 L71 29 L67 18 L60 29 L53 18 L49 29 L38 23 L41 32 C37 35 33 41 32 48Z"
+        d="M42 33 C40 16 50 8.5 61 8.5 C73 8.5 80 16 78 33 C77 26 74 22 70 21 L67 25 L63 20 L58 25 L53 21 C47 22 43 27 42 33Z"
         fill={hair}
-        stroke={OUT}
-        strokeWidth="1.8"
+        stroke={LINE}
+        strokeWidth="0.9"
         strokeLinejoin="round"
       />
-      <path d="M46 22 Q54 17 62 19" stroke="#8A5A46" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+      <path d="M48 15 Q56 10.5 65 12" stroke="#fff" strokeOpacity="0.18" strokeWidth="1.8" fill="none" strokeLinecap="round" />
     </>
   );
 }
 
 /* ---------- Student ---------- */
 function Student({ skin }: { skin: string }) {
-  const hair = '#1B1424';
+  const hair = '#32232A';
   return (
     <>
-      {/* braids behind */}
       {[1, -1].map((s) => (
         <g key={s}>
+          <path d={`M${60 - 17 * s} 36 C${60 - 31 * s} 56 ${60 - 32 * s} 80 ${60 - 28 * s} 100`} stroke={LINE} strokeWidth="8.2" strokeLinecap="round" fill="none" />
+          <path d={`M${60 - 17 * s} 36 C${60 - 31 * s} 56 ${60 - 32 * s} 80 ${60 - 28 * s} 100`} stroke={hair} strokeWidth="7" strokeLinecap="round" fill="none" />
           <path
-            d={`M${60 - 25 * s} 52 C${60 - 36 * s} 70 ${60 - 40 * s} 96 ${60 - 36 * s} 118`}
-            stroke={OUT}
-            strokeWidth="12.5"
-            strokeLinecap="round"
-            fill="none"
-          />
-          <path d={`M${60 - 25 * s} 52 C${60 - 36 * s} 70 ${60 - 40 * s} 96 ${60 - 36 * s} 118`} stroke={hair} strokeWidth="9.5" strokeLinecap="round" fill="none" />
-          <path
-            d={`M${60 - 31 * s} 70 l${6 * s} 3 M${60 - 34 * s} 82 l${6 * s} 3 M${60 - 36 * s} 94 l${6 * s} 3 M${60 - 37 * s} 106 l${6 * s} 3`}
+            d={`M${60 - 26 * s} 56 l${4 * s} 2 M${60 - 29 * s} 66 l${4 * s} 2 M${60 - 30 * s} 76 l${4 * s} 2 M${60 - 30 * s} 86 l${4 * s} 2`}
             stroke="#fff"
-            strokeOpacity="0.22"
-            strokeWidth="1.6"
+            strokeOpacity="0.15"
+            strokeWidth="1.2"
           />
-          <circle cx={60 - 36 * s} cy="120" r="4" fill="#D93F3F" stroke={OUT} strokeWidth="1.2" />
+          <circle cx={60 - 28 * s} cy="102" r="3.4" fill="#C8504A" stroke={LINE} strokeWidth="0.7" />
         </g>
       ))}
-      <Legs leg={skin} sock="#FFFFFF" shoe="#1E1E2A" skin={skin} />
+      <Legs leg={skin} sock="#F6F1E6" shoe="#4A3328" skin={skin} />
       <Arms
-        sleeve="#FFFFFF"
+        sleeve="#FAF6EC"
         skin={skin}
+        sleeveEnd={84}
         left={
-          <g transform="rotate(-4 28 140)">
-            <rect x="12" y="128" width="26" height="6.5" rx="1.2" fill="#3C79D8" stroke={OUT} strokeWidth="1.2" />
-            <rect x="13.5" y="121.5" width="24" height="6.5" rx="1.2" fill="#E4572E" stroke={OUT} strokeWidth="1.2" />
-            <rect x="11" y="115" width="25" height="6.5" rx="1.2" fill="#2EAD6B" stroke={OUT} strokeWidth="1.2" />
-            <circle cx="33" cy="140" r="6" fill={skin} stroke={OUT} strokeWidth="1.6" />
+          <g transform="rotate(-4 32 124)">
+            <rect x="21" y="116" width="19" height="5" rx="1" fill="#6F8FA8" stroke={LINE} strokeWidth="0.7" />
+            <rect x="22" y="111" width="18" height="5" rx="1" fill="#C96A4B" stroke={LINE} strokeWidth="0.7" />
+            <rect x="20" y="106" width="19" height="5" rx="1" fill="#8FB09A" stroke={LINE} strokeWidth="0.7" />
+            <circle cx="38" cy="123" r="4.2" fill={skin} stroke={LINE} strokeWidth="0.9" />
           </g>
         }
       />
       <g className="ch-garment">
-        <path d="M39 86 Q60 93 81 86 L83 128 Q60 134 37 128Z" fill="#FFFFFF" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M44 88 L48 128 M76 88 L72 128" stroke="#C9202C" strokeWidth="4.5" strokeLinecap="round" opacity="0.9" />
-        <path d="M37 112 L83 112 L90 168 Q60 176 30 168Z" fill="#243B7A" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M46 116 L42 170 M54 116 L52 172 M66 116 L68 172 M74 116 L78 170" stroke="#fff" strokeOpacity="0.22" strokeWidth="1.4" />
-        <path d="M53 86 L60 98 L67 86Z" fill="#fff" stroke={OUT} strokeWidth="1.2" />
-        <path d="M60 97 L55 108 L60 106 L65 108Z" fill="#D93F3F" stroke={OUT} strokeWidth="1.2" strokeLinejoin="round" />
+        <path d="M44 63 Q60 67 76 63 L78 108 Q60 113 42 108Z" fill="#FAF6EC" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M43 98 L77 98 L86 154 Q60 161 34 154Z" fill="#3E5575" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M48 102 L43 156 M55 102 L52 158 M65 102 L68 158 M72 102 L77 156" stroke="#fff" strokeOpacity="0.16" strokeWidth="1" />
+        <path d="M55 64 L60 74 L65 64Z" fill="#fff" stroke={LINE} strokeWidth="0.8" />
+        <path d="M60 73 L56.4 82 L60 80.4 L63.6 82Z" fill="#C8504A" stroke={LINE} strokeWidth="0.7" strokeLinejoin="round" />
+        <Shade d="M43 98 L77 98 L86 154 Q60 161 34 154Z" />
+        <Shade d="M44 63 Q60 67 76 63 L78 108 Q60 113 42 108Z" />
       </g>
       <Neck skin={skin} />
-      <Face skin={skin} iris="#5B3A8A" brow={hair} />
+      <Face skin={skin} hair={hair} lashes />
       <path
-        d="M32 48 C31 25 45 12 60 12 C76 12 90 25 88 48 C85 38 79 30 69 27 C67 34 63 37 58 37 C52 37 46 33 42 28 C38 32 34 38 32 48Z"
+        d="M42.5 33 C41.5 16 51 9 60 9 C70 9 78.5 16 77.5 33 C75 24 69 19.6 62 19 C60 23 56 25 52 24 C47 24 44 28 42.5 33Z"
         fill={hair}
-        stroke={OUT}
-        strokeWidth="1.8"
+        stroke={LINE}
+        strokeWidth="0.9"
         strokeLinejoin="round"
       />
-      <path d="M44 20 Q52 15 61 16" stroke="#fff" strokeOpacity="0.3" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      <path d="M33 24 Q60 6 87 24" stroke="#D93F3F" strokeWidth="3" fill="none" strokeLinecap="round" opacity="0" />
+      <path d="M48 14 Q56 9.5 65 11" stroke="#fff" strokeOpacity="0.2" strokeWidth="1.8" fill="none" strokeLinecap="round" />
     </>
   );
 }
 
 /* ---------- Woman in a saree ---------- */
 function Woman({ skin }: { skin: string }) {
-  const hair = '#1B1424';
+  const hair = '#2E2128';
   return (
     <>
-      <path
-        d="M31 42 C27 18 44 10 60 10 C77 10 93 18 89 42 L93 124 Q83 138 70 128 L50 128 Q37 138 27 124Z"
-        fill={hair}
-        stroke={OUT}
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <Legs leg="#1F8A5B" shoe="#E5B93A" skin={skin} />
+      <circle cx="60" cy="9" r="8" fill={hair} stroke={LINE} strokeWidth="0.9" />
+      <path d="M44 30 C42 40 44 52 48 60 L72 60 C76 52 78 40 76 30Z" fill={hair} opacity="0.9" />
+      <Legs leg="#3E8E8A" shoe="#C9A24A" skin={skin} />
       <Arms
-        sleeve="#A8235A"
+        sleeve="#B5483C"
         skin={skin}
+        sleeveEnd={84}
         left={
           <g>
-            {[132, 135.4, 138.8].map((y) => (
-              <ellipse key={y} cx="32.6" cy={y} rx="5.2" ry="1.4" fill="none" stroke="#E5B93A" strokeWidth="1.5" />
+            {[110, 112.6, 115.2].map((y) => (
+              <ellipse key={y} cx="39.8" cy={y} rx="3.8" ry="1" fill="none" stroke="#D9B04A" strokeWidth="1.1" />
             ))}
           </g>
         }
         right={
           <g>
-            {[132, 135.4, 138.8].map((y) => (
-              <ellipse key={y} cx="87.4" cy={y} rx="5.2" ry="1.4" fill="none" stroke="#E5B93A" strokeWidth="1.5" />
+            {[110, 112.6, 115.2].map((y) => (
+              <ellipse key={y} cx="80.2" cy={y} rx="3.8" ry="1" fill="none" stroke="#D9B04A" strokeWidth="1.1" />
             ))}
           </g>
         }
       />
       <g className="ch-garment">
-        <path d="M39 86 Q60 93 81 86 L82 118 Q60 124 38 118Z" fill="#E3B088" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M39 86 Q60 93 81 86 L81 108 Q60 114 39 108Z" fill="#A8235A" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M37 116 L83 116 L91 192 Q60 199 29 192Z" fill="#1F8A5B" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M48 120 Q45 158 41 190 M58 120 L57 194 M68 120 Q71 158 76 190" stroke="#fff" strokeOpacity="0.2" strokeWidth="1.6" fill="none" />
-        <path d="M30 184 L90 184" stroke="#E5B93A" strokeWidth="5" />
-        <path d="M30 184 L90 184" stroke="#A8235A" strokeWidth="1.4" strokeDasharray="3 2.4" />
-        {/* pallu across the body */}
-        <path d="M41 87 L58 92 L84 134 L72 140 L40 108Z" fill="#1F8A5B" stroke={OUT} strokeWidth="1.8" strokeLinejoin="round" />
-        <path d="M41 87 L40 108 M72 140 L84 134" stroke="#E5B93A" strokeWidth="3.4" strokeLinecap="round" />
+        <path d="M44 63 Q60 67 76 63 L78 100 Q60 105 42 100Z" fill="#E6B58F" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M44 63 Q60 67 76 63 L77 84 Q60 89 43 84Z" fill="#B5483C" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M41 98 L79 98 L86 188 Q60 195 34 188Z" fill="#3E8E8A" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M50 102 Q47 148 43 186 M60 102 L60 192 M70 102 Q73 148 77 186" stroke="#fff" strokeOpacity="0.2" strokeWidth="1.2" fill="none" />
+        <path d="M35 181 L85 181" stroke="#C8745A" strokeWidth="5" />
+        <path d="M35 181 L85 181" stroke="#F0D79A" strokeWidth="1" strokeDasharray="3 2.4" />
+        <Shade d="M41 98 L79 98 L86 188 Q60 195 34 188Z" />
+        {/* pallu over the shoulder */}
+        <path d="M45 64 L58 68 L80 112 L69 118 L42 88Z" fill="#3E8E8A" stroke={LINE} strokeWidth="0.9" strokeLinejoin="round" />
+        <path d="M45 64 L42 88 M69 118 L80 112" stroke="#C8745A" strokeWidth="3" strokeLinecap="round" />
+        <Shade d="M45 64 L58 68 L80 112 L69 118 L42 88Z" />
       </g>
       <Neck skin={skin} />
-      <Face skin={skin} iris="#4B2A1A" brow={hair} />
-      <circle cx="34" cy="62" r="2.6" fill="#E5B93A" stroke={OUT} strokeWidth="0.9" />
-      <circle cx="86" cy="62" r="2.6" fill="#E5B93A" stroke={OUT} strokeWidth="0.9" />
+      <circle cx="43" cy="42" r="1.8" fill="#D9B04A" stroke={LINE} strokeWidth="0.6" />
+      <circle cx="77" cy="42" r="1.8" fill="#D9B04A" stroke={LINE} strokeWidth="0.6" />
+      <Face skin={skin} hair={hair} lashes />
       <path
-        d="M32 48 C31 26 46 13 60 13 C74 13 89 26 88 48 C84 36 75 28 60 28 C45 28 36 36 32 48Z"
+        d="M42.5 33 C41 17 50 10.5 60 10.5 C70 10.5 79 17 77.5 33 C74 24 68 19.5 60 19.5 C52 19.5 46 24 42.5 33Z"
         fill={hair}
-        stroke={OUT}
-        strokeWidth="1.8"
+        stroke={LINE}
+        strokeWidth="0.9"
         strokeLinejoin="round"
       />
-      <path d="M45 21 Q53 16 62 17" stroke="#fff" strokeOpacity="0.3" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      <circle cx="60" cy="40" r="2.3" fill="#D6244A" />
-      {/* jasmine flowers */}
+      <path d="M48 15 Q56 11 64 12" stroke="#fff" strokeOpacity="0.2" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <circle cx="60" cy="24.5" r="1.5" fill="#C23B4A" />
       {[
-        [78, 24],
-        [83, 29],
-        [86, 36],
-        [73, 20],
-        [88, 44],
+        [51, 3],
+        [56, 0.6],
+        [62, 0.4],
+        [68, 3],
+        [70, 9],
+        [50, 9],
       ].map(([x, y]) => (
         <g key={`${x}-${y}`}>
-          <circle cx={x} cy={y} r="3.2" fill="#fff" stroke={OUT} strokeWidth="0.9" />
-          <circle cx={x} cy={y} r="1" fill="#F2C94C" />
+          <circle cx={x} cy={y} r="2.5" fill="#FFFBF0" stroke={LINE} strokeWidth="0.6" />
+          <circle cx={x} cy={y} r="0.7" fill="#E9CF8A" />
         </g>
       ))}
     </>
@@ -430,7 +477,7 @@ function Woman({ skin }: { skin: string }) {
 export function Palm({ skin }: { skin: string }) {
   return (
     <svg viewBox="0 0 100 120" aria-hidden="true" focusable="false">
-      <g stroke={OUT} strokeWidth="3" strokeLinejoin="round" strokeLinecap="round" fill={skin}>
+      <g stroke={LINE} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" fill={skin}>
         <rect x="16" y="4" width="14" height="52" rx="7" transform="rotate(-8 23 30)" />
         <rect x="33" y="-4" width="15" height="62" rx="7.5" />
         <rect x="51" y="-2" width="15" height="60" rx="7.5" />
@@ -438,8 +485,8 @@ export function Palm({ skin }: { skin: string }) {
         <path d="M14 70 C2 62 -2 48 6 44 C14 40 22 52 30 62Z" />
         <path d="M14 50 L86 50 C90 80 82 112 52 116 C26 116 10 96 14 50Z" />
       </g>
-      <path d="M30 78 Q50 92 70 78" stroke={OUT} strokeOpacity="0.35" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      <path d="M36 62 Q50 70 66 62" stroke={OUT} strokeOpacity="0.25" strokeWidth="2.4" fill="none" strokeLinecap="round" />
+      <path d="M30 78 Q50 92 70 78" stroke={LINE} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <path d="M36 62 Q50 70 66 62" stroke={LINE} strokeOpacity="0.6" strokeWidth="1.8" fill="none" strokeLinecap="round" />
     </svg>
   );
 }

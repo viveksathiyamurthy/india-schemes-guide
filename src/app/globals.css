@@ -843,7 +843,7 @@ html.zooming {
 }
 
 .ch-garment {
-  transform-origin: 60px 130px;
+  transform-origin: 60px 110px;
 }
 
 .walking .ch-garment {
@@ -865,7 +865,7 @@ html.zooming {
 
 .raised .ch-arm-r {
   animation: none !important;
-  transform: rotate(-172deg);
+  transform: rotate(-168deg);
 }
 
 .raised .ch-leg-l,
