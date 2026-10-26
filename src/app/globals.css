@@ -577,14 +577,14 @@ html.zooming {
   gap: 0;
   padding: 0;
   background: none;
-  color: #fff;
+  color: #1b2333;
   font-size: clamp(9px, 3.5cqw, 17px);
   line-height: 1.15;
   white-space: nowrap;
   transition: opacity 0.5s ease;
-  -webkit-text-stroke: 3px rgba(5, 15, 40, 0.55);
+  -webkit-text-stroke: 3.5px rgba(255, 255, 255, 0.92);
   paint-order: stroke fill;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
 }
 
 .mapLabel b,
@@ -602,7 +602,7 @@ html.zooming {
   font-style: normal;
   font-weight: 700;
   font-size: 0.92em;
-  color: #f1f5ff;
+  color: #1b2333;
 }
 
 .mapLabel i[lang='ta'],
@@ -631,7 +631,7 @@ html.zooming {
 }
 
 .geoLabel em {
-  color: #b8f5d8;
+  color: #1f6b52;
 }
 
 .mapLabel em::before,

@@ -86,8 +86,8 @@ const landRings = (): number[][] => [...otherLand, ...otherIndia.flatMap((k) => 
 
 /** Satellite-photo palette: deep blue sea, teal shallows, green and tan land. */
 const PASTEL = {
-  sea: ['#0B2D63', '#15488C', '#0D3470'],
-  shallow: '#2F8FB0',
+  sea: ['#0C3A6E', '#17598F', '#0F467D'],
+  shallow: '#6CC4D0',
   land: '#5E7F45',
   desert: '#A8905C',
   foam: 'rgba(190,230,240,0.35)',
@@ -96,14 +96,13 @@ const PASTEL = {
 };
 /** Land colour by latitude (0 = north pole, 1 = south pole), shared by the globe and the sharper patch so they blend. */
 const LAND_STOPS: [number, string][] = [
-  [0, '#F2F6FA'],
-  [0.1, '#C9D2C4'],
-  [0.22, '#6F8A52'],
-  [0.36, '#A8905C'],
-  [0.5, '#3F7A3C'],
-  [0.64, '#A8905C'],
-  [0.8, '#5E7F45'],
-  [0.92, '#E4EAEE'],
+  [0, '#F4F6F8'],
+  [0.15, '#ECE9DD'],
+  [0.36, '#EFEBE0'],
+  [0.5, '#E9E4D2'],
+  [0.64, '#EFEBE0'],
+  [0.85, '#ECE9DD'],
+  [1, '#F4F6F8'],
 ];
 /** Soft colours for the five states, the same ones used on the next screen. */
 export const statePastels = states.map((s) => s.color);
@@ -134,7 +133,21 @@ function seaPaint(ctx: CanvasRenderingContext2D, w: number, h: number, rand: () 
   g.addColorStop(1, PASTEL.sea[2]);
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
-  blotches(ctx, w, h, Math.round((w * h) / 60000), rand, w * 0.03, w * 0.09, 'rgba(90,150,215,0.9)', 'rgba(5,25,70,0.9)', 0.16);
+  blotches(ctx, w, h, Math.round((w * h) / 60000), rand, w * 0.03, w * 0.09, 'rgba(70,140,205,0.9)', 'rgba(5,25,70,0.9)', 0.14);
+  // long, faint swell streaks, like light on moving water
+  ctx.lineCap = 'round';
+  const streaks = Math.round((w * h) / 9000);
+  for (let i = 0; i < streaks; i++) {
+    const x = rand() * w;
+    const y = rand() * h;
+    const len = w * (0.004 + rand() * 0.012);
+    ctx.strokeStyle = rand() < 0.7 ? 'rgba(190,230,255,0.07)' : 'rgba(0,20,60,0.07)';
+    ctx.lineWidth = Math.max(1, w / 1400);
+    ctx.beginPath();
+    ctx.moveTo(x - len, y);
+    ctx.quadraticCurveTo(x, y - len * 0.25, x + len, y + len * 0.05);
+    ctx.stroke();
+  }
 }
 
 /** The whole world, at low detail. */
@@ -158,14 +171,14 @@ export function paintGlobe(canvas: HTMLCanvasElement) {
   ctx.save();
   trace(ctx, rings, proj);
   ctx.clip();
-  blotches(ctx, w, h, 500, rand, w * 0.004, w * 0.016, 'rgba(190,170,110,0.9)', 'rgba(70,90,70,0.9)', 0.14);
+  blotches(ctx, w, h, 500, rand, w * 0.004, w * 0.016, 'rgba(255,255,255,0.9)', 'rgba(170,160,130,0.9)', 0.12);
   ctx.restore();
   ctx.strokeStyle = PASTEL.foam;
   ctx.lineWidth = Math.max(1, w / 1400);
   trace(ctx, rings, proj);
   ctx.stroke();
   // the five states, in their soft colours
-  ctx.globalAlpha = 0.92;
+  ctx.globalAlpha = 1;
   fiveSlugs.forEach((slug, i) => {
     ctx.fillStyle = statePastels[i];
     trace(ctx, indiaStates[slug], proj);
@@ -185,14 +198,17 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   seaPaint(ctx, w, h, rand, (90 - PATCH.lat1) / 180, (90 - PATCH.lat0) / 180);
   // sea gets a little deeper away from the land
   const rings = landRings();
-  ctx.save();
-  ctx.shadowColor = PASTEL.shallow;
-  ctx.shadowBlur = ppd * 0.9;
-  ctx.fillStyle = PASTEL.shallow;
-  trace(ctx, rings.concat(fiveSlugs.flatMap((s) => indiaStates[s])), proj);
-  ctx.fill();
-  ctx.fill();
-  ctx.restore();
+  const everyLand = rings.concat(fiveSlugs.flatMap((s) => indiaStates[s]));
+  // water gets deeper away from the coast: wide mid-blue band, then turquoise shallows, then a pale edge
+  for (const [blur, col, times] of [[ppd * 2.4, 'rgba(24,110,165,0.55)', 1], [ppd * 1.1, 'rgba(60,165,195,0.6)', 1], [ppd * 0.4, 'rgba(120,205,210,0.6)', 1]] as [number, string, number][]) {
+    ctx.save();
+    ctx.shadowColor = col;
+    ctx.shadowBlur = blur;
+    ctx.fillStyle = '#000';
+    trace(ctx, everyLand, proj);
+    for (let k = 0; k < times; k++) ctx.fill();
+    ctx.restore();
+  }
   // other land
   const pt0 = (90 - PATCH.lat1) / 180;
   const pt1 = (90 - PATCH.lat0) / 180;
@@ -204,10 +220,11 @@ export function paintPatch(canvas: HTMLCanvasElement) {
   ctx.save();
   trace(ctx, rings, proj);
   ctx.clip();
-  blotches(ctx, w, h, 800, rand, ppd * 0.2, ppd * 0.7, 'rgba(205,185,140,0.9)', 'rgba(90,100,80,0.9)', 0.12);
+  blotches(ctx, w, h, 800, rand, ppd * 0.2, ppd * 0.7, 'rgba(255,255,255,0.9)', 'rgba(170,160,130,0.9)', 0.1);
   ctx.restore();
-  ctx.strokeStyle = PASTEL.foam;
-  ctx.lineWidth = ppd * 0.05;
+  ctx.strokeStyle = 'rgba(70,75,85,0.55)';
+  ctx.lineWidth = Math.max(1, ppd * 0.012);
+  ctx.lineJoin = 'round';
   trace(ctx, rings, proj);
   ctx.stroke();
   // the five states
@@ -221,18 +238,14 @@ export function paintPatch(canvas: HTMLCanvasElement) {
     trace(ctx, rs, proj);
     ctx.clip();
     // flat palette colour with only a faint soft light/shade, no green spots
-    ctx.globalAlpha = 0.92;
     ctx.fillStyle = statePastels[i];
     ctx.fillRect(0, 0, w, h);
-    ctx.globalAlpha = 1;
-    blotches(ctx, w, h, 500, rand, ppd * 0.3, ppd * 0.9, 'rgba(255,255,255,0.9)', 'rgba(40,50,70,0.9)', 0.07);
     ctx.restore();
   });
   // soft borders between the states, and a light coast line
   ctx.lineJoin = 'round';
-  ctx.strokeStyle = PASTEL.border;
-  ctx.setLineDash([ppd * 0.06, ppd * 0.05]);
-  ctx.lineWidth = ppd * 0.03;
+  ctx.strokeStyle = 'rgba(28,38,54,0.9)';
+  ctx.lineWidth = Math.max(1.2, ppd * 0.02);
   fiveSlugs.forEach((slug) => {
     trace(ctx, indiaStates[slug], proj);
     ctx.stroke();
@@ -367,7 +380,7 @@ function softenOutside(canvas: HTMLCanvasElement, proj: Proj) {
     ctx.drawImage(tmp, 0, 0);
   }
   // 4) the further from the states, the darker, so the eye stays on them
-  ctx.drawImage(maskOf((deg) => 0.4 * smooth(0.3, 4.5, deg), [4, 10, 28]), 0, 0, w, h);
+  ctx.drawImage(maskOf((deg) => 0.16 * smooth(0.3, 4.5, deg), [4, 10, 28]), 0, 0, w, h);
 }
 
 /** One flat colour per state, so the screen can tell which state a pixel is in. */

@@ -71,6 +71,11 @@ void main() {
     return;
   }
   vec3 col = t.rgb * (0.3 + 0.85 * smoothstep(0.2, 0.75, d));
+  float water = smoothstep(0.03, 0.16, t.b - t.r);
+  vec3 hv = normalize(uLight + vec3(0.0, 0.0, 1.0));
+  float spec = pow(max(dot(n, hv), 0.0), 38.0);
+  col += vec3(0.85, 0.93, 1.0) * spec * 0.55 * water;
+  col += vec3(0.1, 0.2, 0.32) * pow(1.0 - max(n.z, 0.0), 2.0) * 0.25 * water;
   col += vec3(0.35, 0.6, 1.0) * pow(1.0 - max(n.z, 0.0), 4.0) * 0.12;
   float a = 1.0;
   if (uMode > 0.5) {
