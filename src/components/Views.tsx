@@ -54,6 +54,14 @@ export function PersonaView({ state }: { state: StateInfo }) {
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
   }, []);
+  // Fetch the short film for the house builder in the background, so it starts at once when chosen.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
+      if (!nav.connection?.saveData) fetch('/videos/home-seeker.mp4').catch(() => undefined);
+    }, 1500);
+    return () => window.clearTimeout(t);
+  }, []);
 
   function pick(e: MouseEvent<HTMLAnchorElement>, p: Persona) {
     if (walk) {
