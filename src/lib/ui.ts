@@ -40,6 +40,10 @@ export const ui = {
   available: { en: 'Available', ta: 'கிடைக்கிறது' },
   comingSoon: { en: 'Coming soon', ta: 'விரைவில்' },
   whoAreYou: { en: 'Who are you?', ta: 'நீங்கள் யார்?' },
+  personaIntro: {
+    en: 'Choose the one that fits you best. You will see the schemes for you from {state} and the Union/Central Government.',
+    ta: 'உங்களுக்குப் பொருந்துவதைத் தேர்ந்தெடுக்கவும். {state} மற்றும் ஒன்றிய/மத்திய அரசின் உங்களுக்கான திட்டங்களைக் காண்பீர்கள்.',
+  },
   changeState: { en: 'Change state', ta: 'மாநிலத்தை மாற்று' },
   changePersona: { en: 'Change persona', ta: 'வகையை மாற்று' },
   back: { en: 'Back', ta: 'பின்செல்' },

@@ -8,7 +8,6 @@ import { formatDate } from '@/lib/text';
 import { byPersona, searchSchemes } from '@/lib/search';
 import { personas, states, type Persona, type StateInfo } from '@/data/config';
 import type { Scheme } from '@/data/types';
-import { mapShapes, mapViewBox } from '@/data/southMap';
 import { Character } from './Characters';
 import { StateMap } from './StateMap';
 import { EarthIntro, webglWorks } from './EarthIntro';
@@ -45,42 +44,55 @@ export function WelcomeView() {
   );
 }
 
-/* Screen 2: choose a persona. */
+/**
+ * public/personas/road.jpg: one painted road running down through the five places, in the
+ * order of `personas` (scripts/build-persona-road.py). Rows are where each place starts, in
+ * image pixels; the road runs down at ROAD.x.
+ */
+const ROAD = { w: 1456, h: 3210, x: 365 };
+const ROAD_ROWS = [0, 695, 1295, 1895, 2495, 3210];
+
+/* Screen 2: choose a persona. One row per persona, down the road; scroll up and down. */
 export function PersonaView({ state }: { state: StateInfo }) {
   const { t, tr } = useLang();
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
   }, []);
-  const path = mapShapes[state.slug];
-  const style = { '--st': state.color, '--on': state.onColor } as CSSProperties;
+  const pct = (px: number) => `${(px / ROAD.h) * 100}%`;
   return (
-    <div className="persona" style={style}>
-      <div className="backdrop" aria-hidden="true">
-        <svg viewBox={`0 0 ${mapViewBox.width} ${mapViewBox.height}`} preserveAspectRatio="xMidYMid slice">
-          <path d={path.d} fill="#fff" opacity="0.13" />
-        </svg>
-      </div>
-      <div className="page">
-        <BackLink href="/">{t(ui.changeState)}</BackLink>
-        <span className="chip">{tr(state.name, state.nameTa)}</span>
-        <h1>{t(ui.whoAreYou)}</h1>
-        <SearchBar stateSlug={state.slug} />
-        <div className="whoList">
-          {personas.map((p) => (
-            <Link key={p.slug} href={`/${state.slug}/${p.slug}`} className={`who k-${p.character}`}>
-              <span className="char">
-                <Character kind={p.character} />
-              </span>
-              <span className="whoText">
-                <b>{tr(p.labelEn, p.labelTa)}</b>
-                <small>{tr(p.hintEn, p.hintTa)}</small>
-              </span>
-              <span className="go2" aria-hidden="true">
-                &rsaquo;
-              </span>
-            </Link>
-          ))}
+    <div className="persona">
+      <div className="personaIntro">
+        <div className="row">
+          <BackLink href="/">{t(ui.changeState)}</BackLink>
+          <span className="chip">{tr(state.name, state.nameTa)}</span>
         </div>
+        <h1>{t(ui.whoAreYou)}</h1>
+        <p className="sub personaSub">{t(ui.personaIntro).replace('{state}', tr(state.name, state.nameTa))}</p>
+        <SearchBar stateSlug={state.slug} />
+      </div>
+      <div className="road" style={{ aspectRatio: `${ROAD.w} / ${ROAD.h}`, '--road-x': `${(ROAD.x / ROAD.w) * 100}%` } as CSSProperties}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="roadImg" src="/personas/road.jpg" alt="" />
+        <ul>
+          {personas.map((p, i) => (
+            <li key={p.slug} style={{ top: pct(ROAD_ROWS[i]), height: pct(ROAD_ROWS[i + 1] - ROAD_ROWS[i]) }}>
+              <Link href={`/${state.slug}/${p.slug}`} className="who">
+                <span className="char">
+                  <Character kind={p.character} />
+                </span>
+                <span className="whoCard">
+                  <span>
+                    <b>{tr(p.labelEn, p.labelTa)}</b>
+                    <small>{tr(p.hintEn, p.hintTa)}</small>
+                  </span>
+                  <span className="go2" aria-hidden="true">
+                    &rsaquo;
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );
