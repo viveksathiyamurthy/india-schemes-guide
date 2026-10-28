@@ -680,127 +680,121 @@ html.zooming {
 }
 
 /* ================= Screen 2: who are you ================= */
+/* One painted road runs down through the five places; each persona is a row on it. */
 .persona {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 8px 16px 0;
+}
+
+.personaIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.personaIntro .row {
+  align-items: center;
+}
+
+.personaSub {
+  display: none;
+}
+
+.road {
+  container-type: inline-size;
   position: relative;
-  color: var(--on);
-}
-
-.persona .backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: var(--st);
+  margin: 0 -16px;
   overflow: hidden;
+  background: #8cc152;
 }
 
-.persona .backdrop svg {
+.roadImg {
   position: absolute;
-  right: -12%;
-  bottom: -8%;
-  width: 120%;
-  height: 120%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
-.persona .back,
-.persona h1 {
-  color: var(--on);
+.road ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.persona .chip {
-  background: rgba(255, 255, 255, 0.92);
-  border-color: #fff;
-  color: var(--ink);
-}
-
-.persona .inp {
-  border-color: #fff;
-}
-
-.persona .go {
-  background: var(--ink);
-}
-
-.whoList {
-  display: grid;
-  gap: 74px 14px;
-  padding-top: 70px;
-  grid-template-columns: 1fr;
+.road li {
+  position: absolute;
+  left: 0;
+  right: 0;
 }
 
 .who {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 128px;
-  padding: 12px 16px 12px 118px;
-  border-radius: 24px;
-  background: #fff;
+  position: absolute;
+  inset: 0;
+  display: block;
   color: var(--ink);
   text-decoration: none;
-  border: 0;
-  box-shadow: 0 6px 0 rgba(29, 26, 58, 0.22);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  animation: rise 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
-  animation-delay: calc(var(--i) * 90ms + 150ms);
 }
 
-.who:hover,
 .who:focus-visible {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 0 rgba(29, 26, 58, 0.22);
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
 }
 
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
+/* The character stands on the road */
 .who .char {
-  z-index: 1;
   position: absolute;
-  left: 8px;
-  bottom: 8px;
-  width: 100px;
-  height: 196px;
+  left: var(--road-x);
+  bottom: 4%;
+  width: 34cqw;
+  height: 88%;
+  transform: translateX(-50%);
   pointer-events: none;
 }
 
-.who.gone .char {
-  visibility: hidden;
+.who .whoCard {
+  position: absolute;
+  right: 3%;
+  bottom: 7%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(54%, 320px);
+  box-sizing: border-box;
+  padding: 10px 12px 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 250, 240, 0.95);
+  box-shadow: 0 4px 0 rgba(40, 30, 10, 0.22);
 }
 
-.who .whoText b {
+.who:hover .whoCard {
+  background: #fff;
+}
+
+.who .whoCard b {
   display: block;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   line-height: 1.2;
 }
 
-.who .whoText small {
+.who .whoCard small {
   display: block;
   margin-top: 2px;
-  font-size: 13px;
+  font-size: 12.5px;
+  line-height: 1.3;
   color: var(--grey);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .who .go2 {
   margin-left: auto;
   font-weight: 800;
   font-size: 26px;
-  color: var(--st);
-}
-
-.persona.leaving .who:not(.gone) {
-  opacity: 0;
-  transition: opacity 0.5s ease;
+  line-height: 1;
+  color: #e4572e;
 }
 
 /* ================= Characters ================= */
@@ -813,85 +807,6 @@ html.zooming {
   filter: drop-shadow(0 5px 6px rgba(29, 26, 58, 0.3));
   user-select: none;
   -webkit-user-drag: none;
-}
-
-.walkBob {
-  width: 100%;
-  height: 100%;
-  transform-origin: 50% 100%;
-}
-
-.walkBob.stepping {
-  animation: stride 0.46s ease-in-out infinite;
-}
-
-@keyframes stride {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-2deg);
-  }
-  50% {
-    transform: translateY(-6%) rotate(2deg);
-  }
-}
-
-/* ================= Walk out and curtain ================= */
-.walkout {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  pointer-events: all;
-}
-
-.walkDim {
-  position: absolute;
-  inset: 0;
-  background: rgba(20, 12, 34, 0.78);
-  opacity: 0;
-}
-
-.walkVideo {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  background: #edebe7;
-  opacity: 0;
-}
-
-.walker {
-  position: fixed;
-  z-index: 2;
-  transform-origin: center center;
-  will-change: transform;
-}
-
-.walkBlack {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  background: #0b0713;
-  opacity: 0;
-}
-
-.curtain {
-  position: fixed;
-  inset: 0;
-  z-index: 999;
-  background: #0b0713;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 1s ease;
-}
-
-.curtain.shut {
-  opacity: 1;
-  pointer-events: all;
-}
-
-.curtain.instant {
-  transition: none;
 }
 
 /* List screen opens with a gentle rise */
@@ -938,26 +853,49 @@ html.zooming {
     font-size: 17px;
   }
 
-  .whoList {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 84px 24px;
-    padding-top: 90px;
+}
+
+/* Desktop: title and search on the left, the road on the right */
+@media (min-width: 900px) {
+  .persona {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 580px);
+    align-items: start;
+    gap: 40px;
+    padding: 32px 32px 40px;
   }
 
-  .who {
-    min-height: 140px;
-    padding-left: 150px;
+  .personaIntro {
+    position: sticky;
+    top: 24px;
+    gap: 16px;
   }
 
-  .who .char {
-    width: 132px;
-    height: 236px;
-    left: 10px;
-    bottom: 8px;
+  .personaIntro h1 {
+    font-size: 44px;
   }
 
-  .who .whoText b {
+  .personaSub {
+    display: block;
+    font-size: 18px;
+  }
+
+  .road {
+    margin: 0;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(40, 30, 10, 0.18);
+  }
+
+  .who .whoCard {
+    padding: 14px 16px 14px 18px;
+  }
+
+  .who .whoCard b {
     font-size: 19px;
+  }
+
+  .who .whoCard small {
+    font-size: 14px;
   }
 }
 
@@ -1111,4 +1049,149 @@ html.space .foot-note {
 html.space .welcome.page,
 html.space .welcome {
   padding: 0;
+}
+
+/* ================= Screen 1: the satellite Earth (EarthIntro) ================= */
+.earthCanvas,
+.earthLines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.earthStage .stars {
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.earthStage .planetBox.on .stars {
+  opacity: 1;
+}
+
+.earthLines {
+  opacity: 0;
+}
+
+.earthLines path {
+  fill: #f2a33a;
+  fill-opacity: 0;
+  stroke: #fff6dc;
+  stroke-opacity: 0.95;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: fill-opacity 0.25s ease, stroke-width 0.25s ease;
+}
+
+.earthLines path.on {
+  fill-opacity: 0.38;
+  stroke: #ffd28f;
+  stroke-width: 2.6;
+}
+
+.earthLeader {
+  stroke: #fff;
+  stroke-opacity: 0.8;
+  stroke-width: 1;
+}
+
+.earthNames {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.earthName,
+.seaName {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.earthName {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font: inherit;
+  color: #fff;
+  text-decoration: none;
+  text-align: center;
+  line-height: 1.2;
+  cursor: pointer;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95), 0 0 12px rgba(0, 0, 0, 0.75);
+}
+
+.earthName.end {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.earthName:hover,
+.earthName.on {
+  color: #ffd28f;
+}
+
+.earthName:focus-visible {
+  outline: 2px solid #f2a33a;
+  outline-offset: 2px;
+}
+
+.earthName b {
+  font-weight: 800;
+  font-size: clamp(13px, 1.25vw, 18px);
+  letter-spacing: 0.02em;
+}
+
+.earthName i {
+  font-style: normal;
+  font-weight: 700;
+  font-size: clamp(12px, 1.1vw, 16px);
+}
+
+.earthName i[lang='ta'] { font-family: var(--font-tamil), 'Noto Sans Tamil', sans-serif; }
+.earthName i[lang='ml'] { font-family: var(--font-malayalam), 'Noto Sans Malayalam', sans-serif; }
+.earthName i[lang='kn'] { font-family: var(--font-kannada), 'Noto Sans Kannada', sans-serif; }
+.earthName i[lang='te'] { font-family: var(--font-telugu), 'Noto Sans Telugu', sans-serif; }
+
+.earthName em {
+  margin-top: 2px;
+  font-style: normal;
+  font-weight: 700;
+  font-size: clamp(10.5px, 0.85vw, 12.5px);
+  color: #d5dbe3;
+}
+
+.earthName em.open {
+  color: #ffc46e;
+}
+
+.earthName em.open::before {
+  content: '\25CF ';
+  color: #f2a33a;
+}
+
+.seaName {
+  font-style: italic;
+  font-size: clamp(10px, 1vw, 14px);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(214, 236, 250, 0.7);
+  text-shadow: 0 1px 3px rgba(0, 10, 30, 0.6);
+  pointer-events: none;
+}
+
+.earthWash {
+  background: #000;
+}
+
+html.space.zooming .earthStage .mapNote {
+  opacity: 0;
 }

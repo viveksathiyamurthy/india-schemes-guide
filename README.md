@@ -35,3 +35,9 @@ The Tamil interface text was written by Claude and needs review by a native Tami
 ## Tests
 
 `tests/logic.test.ts` checks the search and scope rules (`npx tsx tests/logic.test.ts`). `tests/harness` runs the real components in a browser without Next.js, for flow checks.
+
+## Screen 1 globe
+
+`src/components/EarthIntro.tsx` draws the Earth with WebGL: it turns to face India, zooms onto the five southern states, keeps those sharp and blurs the rest slightly. Devices without WebGL get the flat map (`StateMap`), and reduced-motion settings skip the intro.
+
+The images in `public/earth/` are NASA Blue Marble imagery (public domain, visibleearth.nasa.gov), made by `scripts/build-earth-textures.py`. The state outlines in `src/data/southGeo.ts` come from `scripts/build-south-geo.mjs`.

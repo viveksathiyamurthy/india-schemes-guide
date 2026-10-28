@@ -1,19 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useLayoutEffect, useState, type CSSProperties, type MouseEvent } from 'react';
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react';
 import { useLang } from '@/lib/lang';
 import { ui } from '@/lib/ui';
 import { formatDate } from '@/lib/text';
 import { byPersona, searchSchemes } from '@/lib/search';
 import { personas, states, type Persona, type StateInfo } from '@/data/config';
 import type { Scheme } from '@/data/types';
-import { useCurtain } from '@/lib/curtain';
-import { mapShapes, mapViewBox } from '@/data/southMap';
 import { Character } from './Characters';
 import { StateMap } from './StateMap';
-import { PlanetMap, webglWorks } from './PlanetMap';
-import { WalkOut, type WalkStart } from './WalkOut';
+import { EarthIntro, webglWorks } from './EarthIntro';
 import { BackButton, BackLink, LevelTag, PlaceTag, RichText, SchemeCard, SearchBar } from './Parts';
 
 /* Screen 1: welcome, search and choose a state on the map */
@@ -42,80 +39,61 @@ export function WelcomeView() {
         <SearchBar />
         <h2 className="mapTitle">{t(ui.chooseState)}</h2>
       </div>
-      {view === 'planet' ? <PlanetMap calm={calm} onFail={() => setView('flat')} onReady={() => document.documentElement.classList.add('spaceReady')} /> : view === 'flat' ? <StateMap /> : <div className="planetStage"><div className="planetBox" /></div>}
+      {view === 'planet' ? <EarthIntro calm={calm} onFail={() => setView('flat')} onReady={() => document.documentElement.classList.add('spaceReady')} /> : view === 'flat' ? <StateMap /> : <div className="planetStage"><div className="planetBox" /></div>}
     </div>
   );
 }
 
-/* Screen 2: choose a persona. Each choice has a character who walks off when chosen. */
+/**
+ * public/personas/road.jpg: one painted road running down through the five places, in the
+ * order of `personas` (scripts/build-persona-road.py). Rows are where each place starts, in
+ * image pixels; the road runs down at ROAD.x.
+ */
+const ROAD = { w: 1456, h: 3210, x: 365 };
+const ROAD_ROWS = [0, 695, 1295, 1895, 2495, 3210];
+
+/* Screen 2: choose a persona. One row per persona, down the road; scroll up and down. */
 export function PersonaView({ state }: { state: StateInfo }) {
   const { t, tr } = useLang();
-  const [walk, setWalk] = useState<WalkStart | null>(null);
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
   }, []);
-  // Fetch the short film for the house builder in the background, so it starts at once when chosen.
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
-      if (!nav.connection?.saveData) fetch('/videos/home-seeker.mp4').catch(() => undefined);
-    }, 1500);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  function pick(e: MouseEvent<HTMLAnchorElement>, p: Persona) {
-    if (walk) {
-      e.preventDefault();
-      return;
-    }
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const spot = e.currentTarget.querySelector('.char');
-    if (!spot) return;
-    e.preventDefault();
-    const r = spot.getBoundingClientRect();
-    document.documentElement.classList.add('zooming');
-    setWalk({ kind: p.character, href: `/${state.slug}/${p.slug}`, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
-  }
-
-  const path = mapShapes[state.slug];
-  const style = { '--st': state.color, '--on': state.onColor } as CSSProperties;
+  const pct = (px: number) => `${(px / ROAD.h) * 100}%`;
   return (
-    <div className={`persona${walk ? ' leaving' : ''}`} style={style}>
-      <div className="backdrop" aria-hidden="true">
-        <svg viewBox={`0 0 ${mapViewBox.width} ${mapViewBox.height}`} preserveAspectRatio="xMidYMid slice">
-          <path d={path.d} fill="#fff" opacity="0.13" />
-        </svg>
-      </div>
-      <div className="page">
-        <BackLink href="/">{t(ui.changeState)}</BackLink>
-        <span className="chip">{tr(state.name, state.nameTa)}</span>
-        <h1>{t(ui.whoAreYou)}</h1>
-        <SearchBar stateSlug={state.slug} />
-        <div className="whoList">
-          {personas.map((p, i) => (
-            <a
-              key={p.slug}
-              href={`/${state.slug}/${p.slug}`}
-              className={`who k-${p.character}${walk?.kind === p.character ? ' gone' : ''}`}
-              style={{ '--i': i } as CSSProperties}
-              onClick={(e) => pick(e, p)}
-            >
-              <span className="char">
-                <Character kind={p.character} />
-              </span>
-              <span className="whoText">
-                <b>{tr(p.labelEn, p.labelTa)}</b>
-                <small>{tr(p.hintEn, p.hintTa)}</small>
-              </span>
-              <span className="go2" aria-hidden="true">
-                &rsaquo;
-              </span>
-            </a>
-          ))}
+    <div className="persona">
+      <div className="personaIntro">
+        <div className="row">
+          <BackLink href="/">{t(ui.changeState)}</BackLink>
+          <span className="chip">{tr(state.name, state.nameTa)}</span>
         </div>
+        <h1>{t(ui.whoAreYou)}</h1>
+        <p className="sub personaSub">{t(ui.personaIntro).replace('{state}', tr(state.name, state.nameTa))}</p>
+        <SearchBar stateSlug={state.slug} />
       </div>
-      {walk ? <WalkOut start={walk} /> : null}
+      <div className="road" style={{ aspectRatio: `${ROAD.w} / ${ROAD.h}`, '--road-x': `${(ROAD.x / ROAD.w) * 100}%` } as CSSProperties}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="roadImg" src="/personas/road.jpg" alt="" />
+        <ul>
+          {personas.map((p, i) => (
+            <li key={p.slug} style={{ top: pct(ROAD_ROWS[i]), height: pct(ROAD_ROWS[i + 1] - ROAD_ROWS[i]) }}>
+              <Link href={`/${state.slug}/${p.slug}`} className="who">
+                <span className="char">
+                  <Character kind={p.character} />
+                </span>
+                <span className="whoCard">
+                  <span>
+                    <b>{tr(p.labelEn, p.labelTa)}</b>
+                    <small>{tr(p.hintEn, p.hintTa)}</small>
+                  </span>
+                  <span className="go2" aria-hidden="true">
+                    &rsaquo;
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
@@ -129,12 +107,10 @@ function countText(n: number, t: (x: { en: string; ta: string }) => string) {
 /* Screen 3: list for a chosen state and persona */
 export function ListView({ state, persona }: { state: StateInfo; persona: Persona }) {
   const { t, tr } = useLang();
-  const { reveal } = useCurtain();
   const [filter, setFilter] = useState<Filter>('all');
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
-    reveal();
-  }, [reveal]);
+  }, []);
   const all = byPersona(state.name, persona.key);
   const shown = all.filter((s) =>
     filter === 'all' ? true : filter === 'state' ? s.level === 'State Government' : s.level === 'Union/Central Government',
