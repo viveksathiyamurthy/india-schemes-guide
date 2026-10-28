@@ -1,19 +1,17 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useLayoutEffect, useState, type CSSProperties, type MouseEvent } from 'react';
+import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react';
 import { useLang } from '@/lib/lang';
 import { ui } from '@/lib/ui';
 import { formatDate } from '@/lib/text';
 import { byPersona, searchSchemes } from '@/lib/search';
 import { personas, states, type Persona, type StateInfo } from '@/data/config';
 import type { Scheme } from '@/data/types';
-import { useCurtain } from '@/lib/curtain';
 import { mapShapes, mapViewBox } from '@/data/southMap';
 import { Character } from './Characters';
 import { StateMap } from './StateMap';
 import { EarthIntro, webglWorks } from './EarthIntro';
-import { WalkOut, type WalkStart } from './WalkOut';
 import { BackButton, BackLink, LevelTag, PlaceTag, RichText, SchemeCard, SearchBar } from './Parts';
 
 /* Screen 1: welcome, search and choose a state on the map */
@@ -47,41 +45,16 @@ export function WelcomeView() {
   );
 }
 
-/* Screen 2: choose a persona. Each choice has a character who walks off when chosen. */
+/* Screen 2: choose a persona. */
 export function PersonaView({ state }: { state: StateInfo }) {
   const { t, tr } = useLang();
-  const [walk, setWalk] = useState<WalkStart | null>(null);
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
   }, []);
-  // Fetch the short film for the house builder in the background, so it starts at once when chosen.
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      const nav = navigator as Navigator & { connection?: { saveData?: boolean } };
-      if (!nav.connection?.saveData) fetch('/videos/home-seeker.mp4').catch(() => undefined);
-    }, 1500);
-    return () => window.clearTimeout(t);
-  }, []);
-
-  function pick(e: MouseEvent<HTMLAnchorElement>, p: Persona) {
-    if (walk) {
-      e.preventDefault();
-      return;
-    }
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const spot = e.currentTarget.querySelector('.char');
-    if (!spot) return;
-    e.preventDefault();
-    const r = spot.getBoundingClientRect();
-    document.documentElement.classList.add('zooming');
-    setWalk({ kind: p.character, href: `/${state.slug}/${p.slug}`, rect: { left: r.left, top: r.top, width: r.width, height: r.height } });
-  }
-
   const path = mapShapes[state.slug];
   const style = { '--st': state.color, '--on': state.onColor } as CSSProperties;
   return (
-    <div className={`persona${walk ? ' leaving' : ''}`} style={style}>
+    <div className="persona" style={style}>
       <div className="backdrop" aria-hidden="true">
         <svg viewBox={`0 0 ${mapViewBox.width} ${mapViewBox.height}`} preserveAspectRatio="xMidYMid slice">
           <path d={path.d} fill="#fff" opacity="0.13" />
@@ -93,14 +66,8 @@ export function PersonaView({ state }: { state: StateInfo }) {
         <h1>{t(ui.whoAreYou)}</h1>
         <SearchBar stateSlug={state.slug} />
         <div className="whoList">
-          {personas.map((p, i) => (
-            <a
-              key={p.slug}
-              href={`/${state.slug}/${p.slug}`}
-              className={`who k-${p.character}${walk?.kind === p.character ? ' gone' : ''}`}
-              style={{ '--i': i } as CSSProperties}
-              onClick={(e) => pick(e, p)}
-            >
+          {personas.map((p) => (
+            <Link key={p.slug} href={`/${state.slug}/${p.slug}`} className={`who k-${p.character}`}>
               <span className="char">
                 <Character kind={p.character} />
               </span>
@@ -111,11 +78,10 @@ export function PersonaView({ state }: { state: StateInfo }) {
               <span className="go2" aria-hidden="true">
                 &rsaquo;
               </span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
-      {walk ? <WalkOut start={walk} /> : null}
     </div>
   );
 }
@@ -129,12 +95,10 @@ function countText(n: number, t: (x: { en: string; ta: string }) => string) {
 /* Screen 3: list for a chosen state and persona */
 export function ListView({ state, persona }: { state: StateInfo; persona: Persona }) {
   const { t, tr } = useLang();
-  const { reveal } = useCurtain();
   const [filter, setFilter] = useState<Filter>('all');
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
-    reveal();
-  }, [reveal]);
+  }, []);
   const all = byPersona(state.name, persona.key);
   const shown = all.filter((s) =>
     filter === 'all' ? true : filter === 'state' ? s.level === 'State Government' : s.level === 'Union/Central Government',

@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Nunito, Noto_Sans_Tamil, Noto_Sans_Malayalam, Noto_Sans_Kannada, Noto_Sans_Telugu } from 'next/font/google';
 import { LangProvider } from '@/lib/lang';
-import { CurtainProvider } from '@/lib/curtain';
 import { Disclaimer, Footer, Header } from '@/components/Chrome';
 import './globals.css';
 
@@ -33,14 +32,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <LangProvider>
-          <CurtainProvider>
           <div className="app">
             <Header />
             <Disclaimer />
             <main>{children}</main>
             <Footer />
           </div>
-          </CurtainProvider>
         </LangProvider>
       </body>
     </html>
