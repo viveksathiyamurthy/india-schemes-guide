@@ -112,7 +112,7 @@ const personaWords: Record<string, string[]> = {
   farmer: ['farm', 'farming', 'agriculture', 'crop', 'kisan', 'paddy', 'விவசாயம்', 'பயிர்', 'உழவர்'],
   home: ['house', 'housing', 'build', 'construction', 'rent', 'flat', 'plot', 'வீடு', 'கட்டுமானம்', 'குடியிருப்பு'],
   student: ['school', 'college', 'scholarship', 'education', 'study', 'studies', 'university', 'கல்வி', 'பள்ளி', 'கல்லூரி', 'படிப்பு'],
-  woman: ['women', 'lady', 'ladies', 'mother', 'girl', 'self help group', 'shg', 'magalir', 'மகளிர்', 'தாய்', 'பெண்கள்'],
+  woman: ['women', 'lady', 'ladies', 'mother', 'girl', 'self help group', 'shg', 'magalir', 'மகளிர்', 'தாய்', 'பெண்', 'பெண்கள்'],
 };
 
 /** Screen 2: personas, by their label, hint or everyday words for them. */

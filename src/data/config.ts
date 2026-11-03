@@ -39,7 +39,7 @@ export const personas: Persona[] = [
   { slug: 'farmer', key: 'Farmer', character: 'farmer', labelEn: 'Farmer', labelTa: 'விவசாயி', hintEn: 'Income support for farming families', hintTa: 'விவசாயக் குடும்பங்களுக்கான வருமான உதவி' },
   { slug: 'home', key: 'Home seeker / House owner', character: 'home', labelEn: 'Home seeker / House owner', labelTa: 'வீடு தேடுபவர் / வீட்டு உரிமையாளர்', hintEn: 'Housing support', hintTa: 'வீட்டு வசதி உதவி' },
   { slug: 'student', key: 'Student', character: 'student', labelEn: 'Student', labelTa: 'மாணவர்', hintEn: 'Scholarships and education loans', hintTa: 'கல்வி உதவித்தொகை, கல்விக் கடன்' },
-  { slug: 'woman', key: 'Woman', character: 'woman', labelEn: 'Woman', labelTa: 'பெண்', hintEn: 'Monthly support and self help groups', hintTa: 'மாதாந்திர உதவி, சுய உதவிக் குழுக்கள்' },
+  { slug: 'woman', key: 'Woman', character: 'woman', labelEn: 'Woman', labelTa: 'மகளிர்', hintEn: 'Monthly support and self help groups', hintTa: 'மாதாந்திர உதவி, சுய உதவிக் குழுக்கள்' },
 ];
 
 export const findState = (slug: string) => states.find((s) => s.slug === slug);
