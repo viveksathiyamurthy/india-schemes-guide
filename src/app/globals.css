@@ -195,6 +195,89 @@ h2 {
   gap: 8px;
 }
 
+/* Search with live suggestions (screens 1 and 2) */
+.srchWrap {
+  position: relative;
+}
+
+.suggest {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(29, 26, 58, 0.18);
+}
+
+.suggest h3 {
+  margin: 6px 8px 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+
+.suggest ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggest a,
+.suggest .off {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  min-height: 44px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.suggest a:hover,
+.suggest a:focus-visible {
+  background: var(--accent-soft);
+}
+
+.suggest b {
+  font-weight: 800;
+}
+
+.suggest small {
+  flex-basis: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--grey);
+}
+
+.suggest em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--grey);
+}
+
+.suggest em.open {
+  color: #b2401d;
+}
+
+.suggest .off {
+  color: var(--grey);
+}
+
+.suggest .none {
+  margin: 6px 8px;
+  font-weight: 700;
+  color: var(--grey);
+}
+
+.chip.off {
+  opacity: 0.7;
+}
+
 .inp {
   flex: 1;
   min-width: 0;
