@@ -112,42 +112,55 @@ export function ListView({ state, persona }: { state: StateInfo; persona: Person
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
   }, []);
-  const shown = searchPersonaSchemes(state.name, persona.key, q).filter((s) =>
-    filter === 'all' ? true : filter === 'state' ? s.level === 'State Government' : s.level === 'Union/Central Government',
-  );
+  const matched = searchPersonaSchemes(state.name, persona.key, q);
+  const isUnion = (s: Scheme) => s.level === 'Union/Central Government';
+  const shown = matched.filter((s) => (filter === 'all' ? true : filter === 'state' ? !isUnion(s) : isUnion(s)));
   const scope = t(ui.scopeState).replace('{state}', tr(state.name, state.nameTa));
   const placeholder = t(ui.listSearchPlaceholder)
     .replace('{persona}', tr(persona.labelEn, persona.labelTa))
     .replace('{state}', tr(state.name, state.nameTa));
-  const filters: { id: Filter; label: string }[] = [
-    { id: 'all', label: t(ui.filterAll) },
-    { id: 'state', label: t(ui.stateGov) },
-    { id: 'union', label: t(ui.unionGov) },
+  const filters: { id: Filter; label: string; n: number }[] = [
+    { id: 'all', label: t(ui.filterAll), n: matched.length },
+    { id: 'state', label: t(ui.stateGov), n: matched.filter((s) => !isUnion(s)).length },
+    { id: 'union', label: t(ui.unionGov), n: matched.filter(isUnion).length },
   ];
   return (
-    <div className="page">
-      <BackLink href={`/${state.slug}`}>{t(ui.changePersona)}</BackLink>
-      <div>
-        <h1>
-          {tr(state.name, state.nameTa)} &middot; {tr(persona.labelEn, persona.labelTa)}
-        </h1>
-        <p className="sub" aria-live="polite">
-          {countText(shown.length, t)} {scope}
-        </p>
+    <div className="list">
+      <div className="banner" aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/personas/${persona.slug}.jpg`} alt="" />
+        <span className="char">
+          <Character kind={persona.character} />
+        </span>
       </div>
-      <ListSearch value={q} onChange={setQ} placeholder={placeholder} />
-      <div className="row" role="group" aria-label="Filter">
-        {filters.map((f) => (
-          <button key={f.id} type="button" className={filter === f.id ? 'f on' : 'f'} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
-            {f.label}
-          </button>
-        ))}
-      </div>
-      {shown.length === 0 ? <p className="empty">{t(ui.noResults)}</p> : null}
-      <div className="cards">
-        {shown.map((s) => (
-          <SchemeCard key={s.id} scheme={s} />
-        ))}
+      <div className="page listPage">
+        <div className="listSide">
+          <BackLink href={`/${state.slug}`}>{t(ui.changePersona)}</BackLink>
+          <div>
+            <h1>
+              {tr(state.name, state.nameTa)} &middot; {tr(persona.labelEn, persona.labelTa)}
+            </h1>
+            <p className="sub" aria-live="polite">
+              {countText(shown.length, t)} {scope}
+            </p>
+          </div>
+          <ListSearch value={q} onChange={setQ} placeholder={placeholder} />
+          <div className="row filters" role="group" aria-label="Filter">
+            {filters.map((f) => (
+              <button key={f.id} type="button" className={filter === f.id ? 'f on' : 'f'} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
+                {f.label} <i>{f.n}</i>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="listMain">
+          {shown.length === 0 ? <p className="empty">{t(ui.noResults)}</p> : null}
+          <div className="cards">
+            {shown.map((s) => (
+              <SchemeCard key={s.id} scheme={s} />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

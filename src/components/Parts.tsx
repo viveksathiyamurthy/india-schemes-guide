@@ -197,7 +197,7 @@ export function stateTa(name: string): string | undefined {
 }
 
 export function SchemeCard({ scheme, showPlace = false }: { scheme: Scheme; showPlace?: boolean }) {
-  const { tr } = useLang();
+  const { t, tr } = useLang();
   return (
     <Link href={`/scheme/${scheme.slug}`} className="card">
       <span className="tags">
@@ -206,6 +206,9 @@ export function SchemeCard({ scheme, showPlace = false }: { scheme: Scheme; show
       </span>
       <b>{tr(scheme.shortName, scheme.nameTa)}</b>
       <span className="d">{tr(scheme.summaryEn, scheme.summaryTa)}</span>
+      <span className="more">
+        {t(ui.viewDetails)} <span aria-hidden="true">&rsaquo;</span>
+      </span>
     </Link>
   );
 }
