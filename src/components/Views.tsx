@@ -104,7 +104,7 @@ function countText(n: number, t: (x: { en: string; ta: string }) => string) {
   return `${n} ${n === 1 ? t(ui.schemeCount1) : t(ui.schemesCount)}`;
 }
 
-/* Screen 3: list for a chosen state and persona. Search only narrows this list. */
+/* Screen 3: list for a chosen state and persona, over the state's own scene. Search only narrows this list. */
 export function ListView({ state, persona }: { state: StateInfo; persona: Persona }) {
   const { t, tr } = useLang();
   const [filter, setFilter] = useState<Filter>('all');
@@ -112,6 +112,13 @@ export function ListView({ state, persona }: { state: StateInfo; persona: Person
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
   }, []);
+  // Over a state's scene, the header and disclaimer strip turn see-through.
+  useLayoutEffect(() => {
+    if (!state.scene) return;
+    const root = document.documentElement;
+    root.classList.add('scene');
+    return () => root.classList.remove('scene');
+  }, [state.scene]);
   const matched = searchPersonaSchemes(state.name, persona.key, q);
   const isUnion = (s: Scheme) => s.level === 'Union/Central Government';
   const shown = matched.filter((s) => (filter === 'all' ? true : filter === 'state' ? !isUnion(s) : isUnion(s)));
@@ -125,16 +132,21 @@ export function ListView({ state, persona }: { state: StateInfo; persona: Person
     { id: 'union', label: t(ui.unionGov), n: matched.filter(isUnion).length },
   ];
   return (
-    <div className="list">
-      <div className="banner" aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={`/personas/${persona.slug}.jpg`} alt="" />
-        <span className="char">
-          <Character kind={persona.character} />
-        </span>
-      </div>
-      <div className="page listPage">
-        <div className="listSide">
+    <div className={state.scene ? 'stateList withScene' : 'stateList'}>
+      {state.scene ? (
+        <div className="sceneBg" aria-hidden="true">
+          <picture>
+            <source media="(min-width: 900px)" srcSet={`/states/${state.slug}-wide.jpg`} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/states/${state.slug}-tall.jpg`} alt="" />
+          </picture>
+          <span className="char">
+            <Character kind={persona.character} />
+          </span>
+        </div>
+      ) : null}
+      <div className="listColumn">
+        <div className="listTop">
           <BackLink href={`/${state.slug}`}>{t(ui.changePersona)}</BackLink>
           <div>
             <h1>
@@ -153,7 +165,14 @@ export function ListView({ state, persona }: { state: StateInfo; persona: Person
             ))}
           </div>
         </div>
-        <div className="listMain">
+        {state.scene ? (
+          <div className="seeRow">
+            <a className="seeList" href="#schemes">
+              {t(ui.seeSchemes).replace('{n}', countText(shown.length, t))} <span aria-hidden="true">&darr;</span>
+            </a>
+          </div>
+        ) : null}
+        <div id="schemes" className="listCards">
           {shown.length === 0 ? <p className="empty">{t(ui.noResults)}</p> : null}
           <div className="cards">
             {shown.map((s) => (

@@ -895,34 +895,96 @@ html.zooming {
 }
 
 /* ================= Screen 3: scheme list ================= */
-/* The persona's own place from the screen 2 road, with them standing on the road */
-.banner {
+/* After choosing a state and a persona: the state's own painted scene fills the page,
+   the persona stands in it, and the list sits on light panels on top. */
+.stateList {
   position: relative;
-  height: 170px;
-  overflow: hidden;
 }
 
-.banner > img {
+.sceneBg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #3f86cf 0%, #6aa6dd 45%);
+}
+
+/* Phone: the whole tall picture, anchored to the bottom; sky colour fills any space above */
+.sceneBg picture img {
+  position: absolute;
+  left: 0;
+  bottom: 0;
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: left center;
+  height: auto;
 }
 
-.banner .char {
+.sceneBg .char {
   position: absolute;
-  left: max(25%, 70px);
-  bottom: 6px;
-  width: 140px;
-  height: 92%;
+  left: 53%;
+  bottom: 3vh;
+  width: 40vw;
+  height: min(220px, 26vh);
   transform: translateX(-50%);
 }
 
-.listSide {
+.listColumn {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  padding: 12px 12px 0;
+}
+
+.listTop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.withScene .listTop {
+  padding: 12px 14px 14px;
+  border-radius: 18px;
+  background: rgba(255, 249, 241, 0.93);
+  box-shadow: 0 8px 24px rgba(30, 40, 60, 0.18);
+}
+
+/* Leaves the scene and the character in view on the first screen */
+.seeRow {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  min-height: max(170px, calc(100svh - 520px));
+}
+
+.seeList {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-bottom: 8px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+  text-decoration: none;
+  box-shadow: 0 6px 16px rgba(20, 20, 40, 0.3);
+}
+
+.listCards {
+  scroll-margin-top: 8px;
+}
+
+.withScene .listCards {
+  margin: 0 -12px;
+  padding: 16px 12px 24px;
+  border-radius: 22px 22px 0 0;
+  background: rgba(255, 249, 241, 0.88);
+  box-shadow: 0 -8px 24px rgba(30, 40, 60, 0.15);
+  backdrop-filter: blur(4px);
 }
 
 .f i {
@@ -931,40 +993,68 @@ html.zooming {
   opacity: 0.8;
 }
 
+/* Header, disclaimer and footer turn see-through over the scene */
+html.scene .top,
+html.scene .strip {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 249, 241, 0.93);
+}
+
+html.scene .foot-note {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  background: rgba(255, 249, 241, 0.88);
+}
+
 @media (min-width: 900px) {
-  .banner {
-    height: 300px;
+  /* Desktop: the wide picture covers the screen, keeping its bottom-left corner in view */
+  .sceneBg picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: left bottom;
   }
 
-  .listPage {
-    display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
-    align-items: start;
-    gap: 40px;
-    padding-top: 28px;
-    padding-bottom: 40px;
+  .sceneBg .char {
+    left: 39%;
+    bottom: 2.5vh;
+    width: 220px;
+    height: min(300px, 34vh);
   }
 
-  .listSide {
-    position: sticky;
-    top: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  .withScene .listColumn {
+    width: 480px;
+    /* The page sits in a centred column; reach past it to 60px from the screen's right edge */
+    margin: 120px min(60px, calc(60px - (100vw - 100%) / 2)) 0 auto;
+    padding: 18px 18px 28px;
+    border-radius: 22px 22px 0 0;
+    background: rgba(255, 249, 241, 0.92);
+    box-shadow: 0 10px 30px rgba(30, 40, 60, 0.2);
   }
 
-  .listSide .filters {
-    flex-direction: column;
-    align-items: stretch;
+  .withScene .listTop,
+  .withScene .listCards {
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    backdrop-filter: none;
   }
 
-  .listSide .f {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .seeRow {
+    display: none;
   }
 
-  .listMain .cards {
+  .stateList:not(.withScene) .listColumn {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 32px 40px;
+  }
+
+  .stateList:not(.withScene) .cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

@@ -8,7 +8,7 @@ Built with Next.js (App Router) and TypeScript. The scheme data starts as a copy
 
 1. **Welcome** (`/`): welcome text, search bar, choose a state.
 2. **Persona** (`/tamil-nadu`): choose who you are.
-3. **Scheme list** (`/tamil-nadu/woman`): all relevant schemes. Searching from screen 1 or 2 goes to `/search?q=...` (with `&state=...` once a state is chosen).
+3. **Scheme list** (`/tamil-nadu/woman`): all relevant schemes, over the chosen state's own painted scene with the persona standing in it. A state's scene is `public/states/<slug>-wide.jpg` (desktop) and `<slug>-tall.jpg` (phone), switched on with `scene: true` in `src/data/config.ts`. Results from the screen 1 search (`/search`) keep the plain layout. Searching from screen 1 or 2 goes to `/search?q=...` (with `&state=...` once a state is chosen).
 4. **Scheme detail** (`/scheme/pm-kisan`): full details and the button to the official government website.
 
 ## Rules built into the code
