@@ -69,7 +69,6 @@ export const ui = {
   documentsRequired: { en: 'Documents required', ta: 'தேவையான ஆவணங்கள்' },
   howToApply: { en: 'How to apply', ta: 'விண்ணப்பிக்கும் முறை' },
   lastVerified: { en: 'Last verified', ta: 'கடைசியாகச் சரிபார்த்தது' },
-  seeSchemes: { en: 'See {n}', ta: '{n} பார்க்க' },
   viewDetails: { en: 'View details and how to apply', ta: 'விவரங்களும் விண்ணப்பிக்கும் முறையும்' },
   officialButton: { en: 'Go to the official government website', ta: 'அதிகாரப்பூர்வ அரசு இணையதளத்திற்குச் செல்லுங்கள்' },
   applyButton: { en: 'Open the application page', ta: 'விண்ணப்பப் பக்கத்தைத் திறக்கவும்' },

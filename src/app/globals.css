@@ -895,36 +895,35 @@ html.zooming {
 }
 
 /* ================= Screen 3: scheme list ================= */
-/* After choosing a state and a persona: the state's own painted scene fills the page,
-   the persona stands in it, and the list sits on light panels on top. */
+/* After choosing a state and a persona: the state's own painted scene. Its landmarks sit
+   along the top (and down the left on desktop); the list sits on the calm part of it. */
 .stateList {
   position: relative;
+  container-type: inline-size;
 }
 
+/* Phone: the tall picture at the top of the page; the plain sand carries on below it */
 .sceneBg {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: linear-gradient(180deg, #3f86cf 0%, #6aa6dd 45%);
+  background: #d5a57c;
 }
 
-/* Phone: the whole tall picture, anchored to the bottom; sky colour fills any space above */
 .sceneBg picture img {
-  position: absolute;
-  left: 0;
-  bottom: 0;
   display: block;
   width: 100%;
   height: auto;
 }
 
+/* The persona stands on the sand, just right of the அ */
 .sceneBg .char {
   position: absolute;
-  left: 53%;
-  bottom: 3vh;
-  width: 40vw;
-  height: min(220px, 26vh);
+  left: 34cqw;
+  top: 40cqw;
+  width: 40cqw;
+  height: 52cqw;
   transform: translateX(-50%);
 }
 
@@ -937,6 +936,10 @@ html.zooming {
   padding: 12px 12px 0;
 }
 
+.withScene .listColumn {
+  padding-top: 95cqw;
+}
+
 .listTop {
   display: flex;
   flex-direction: column;
@@ -946,32 +949,8 @@ html.zooming {
 .withScene .listTop {
   padding: 12px 14px 14px;
   border-radius: 18px;
-  background: rgba(255, 249, 241, 0.93);
-  box-shadow: 0 8px 24px rgba(30, 40, 60, 0.18);
-}
-
-/* Leaves the scene and the character in view on the first screen */
-.seeRow {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  min-height: max(170px, calc(100svh - 520px));
-}
-
-.seeList {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  margin-bottom: 8px;
-  padding: 0 16px;
-  border-radius: 999px;
-  background: var(--ink);
-  color: #fff;
-  font-weight: 800;
-  font-size: 14px;
-  text-decoration: none;
-  box-shadow: 0 6px 16px rgba(20, 20, 40, 0.3);
+  background: rgba(255, 249, 241, 0.94);
+  box-shadow: 0 8px 24px rgba(60, 40, 20, 0.18);
 }
 
 .listCards {
@@ -979,12 +958,7 @@ html.zooming {
 }
 
 .withScene .listCards {
-  margin: 0 -12px;
-  padding: 16px 12px 24px;
-  border-radius: 22px 22px 0 0;
-  background: rgba(255, 249, 241, 0.88);
-  box-shadow: 0 -8px 24px rgba(30, 40, 60, 0.15);
-  backdrop-filter: blur(4px);
+  padding-bottom: 24px;
 }
 
 .f i {
@@ -1009,16 +983,22 @@ html.scene .foot-note {
 }
 
 @media (min-width: 900px) {
-  /* Desktop: the wide picture covers the screen, keeping its bottom-left corner in view */
+  /* Desktop: the wide picture covers the screen. Landmarks run across the top and down
+     the left; the list sits over the calm beach and sea on the right. */
+  .sceneBg {
+    position: fixed;
+  }
+
   .sceneBg picture img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: left bottom;
+    object-position: center bottom;
   }
 
   .sceneBg .char {
-    left: 39%;
+    left: 29%;
+    top: auto;
     bottom: 2.5vh;
     width: 220px;
     height: min(300px, 34vh);
@@ -1027,25 +1007,18 @@ html.scene .foot-note {
   .withScene .listColumn {
     width: 480px;
     /* The page sits in a centred column; reach past it to 60px from the screen's right edge */
-    margin: 120px min(60px, calc(60px - (100vw - 100%) / 2)) 0 auto;
+    margin: 20vh min(60px, calc(60px - (100vw - 100%) / 2)) 0 auto;
     padding: 18px 18px 28px;
     border-radius: 22px 22px 0 0;
-    background: rgba(255, 249, 241, 0.92);
+    background: rgba(255, 249, 241, 0.9);
     box-shadow: 0 10px 30px rgba(30, 40, 60, 0.2);
   }
 
-  .withScene .listTop,
-  .withScene .listCards {
-    margin: 0;
+  .withScene .listTop {
     padding: 0;
     border-radius: 0;
     background: none;
     box-shadow: none;
-    backdrop-filter: none;
-  }
-
-  .seeRow {
-    display: none;
   }
 
   .stateList:not(.withScene) .listColumn {

@@ -165,13 +165,6 @@ export function ListView({ state, persona }: { state: StateInfo; persona: Person
             ))}
           </div>
         </div>
-        {state.scene ? (
-          <div className="seeRow">
-            <a className="seeList" href="#schemes">
-              {t(ui.seeSchemes).replace('{n}', countText(shown.length, t))} <span aria-hidden="true">&darr;</span>
-            </a>
-          </div>
-        ) : null}
         <div id="schemes" className="listCards">
           {shown.length === 0 ? <p className="empty">{t(ui.noResults)}</p> : null}
           <div className="cards">
