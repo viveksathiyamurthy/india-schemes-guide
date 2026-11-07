@@ -1,5 +1,6 @@
 import { schemes } from '@/data/schemes';
 import type { Scheme } from '@/data/types';
+import { personas, states, type Persona, type StateInfo } from '@/data/config';
 
 const UNION = 'Union/Central Government';
 
@@ -38,18 +39,26 @@ function normalise(text: string): string {
   return text.toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+/** Every typed word must be found in `text`. */
+function matchesAll(terms: string[], text: string): boolean {
+  return terms.every((term) => text.includes(term));
+}
+
+function termsOf(query: string): string[] {
+  return normalise(query).split(' ').filter(Boolean);
+}
+
 /**
  * Search by words across names, summaries, benefits, eligibility, department and user types
  * (English and Tamil). Every typed word must be found. Name matches rank first.
- * An empty query returns every scheme in scope.
+ * An empty query returns the whole list.
  */
-export function searchSchemes(query: string, stateName?: string): Scheme[] {
-  const terms = normalise(query).split(' ').filter(Boolean);
-  const scoped = published.filter((s) => inScope(s, stateName));
-  if (terms.length === 0) return scoped.sort(order);
+function rankSchemes(list: Scheme[], query: string): Scheme[] {
+  const terms = termsOf(query);
+  if (terms.length === 0) return [...list].sort(order);
 
   const scored: { scheme: Scheme; score: number }[] = [];
-  for (const scheme of scoped) {
+  for (const scheme of list) {
     const names = normalise([scheme.shortName, scheme.nameEn, scheme.nameTa].join(' '));
     const summary = normalise([scheme.summaryEn, scheme.summaryTa].join(' '));
     const rest = normalise(
@@ -69,4 +78,53 @@ export function searchSchemes(query: string, stateName?: string): Scheme[] {
     if (all) scored.push({ scheme, score });
   }
   return scored.sort((a, b) => b.score - a.score || order(a.scheme, b.scheme)).map((x) => x.scheme);
+}
+
+/** Full-text search across every scheme in scope (all states when no state is given). */
+export function searchSchemes(query: string, stateName?: string): Scheme[] {
+  return rankSchemes(
+    published.filter((s) => inScope(s, stateName)),
+    query,
+  );
+}
+
+/* ---------- Search on each screen ---------- */
+
+/** Screen 1: states, by English name, Tamil name or the name in the state's own language. */
+export function searchStates(query: string): StateInfo[] {
+  const terms = termsOf(query);
+  if (terms.length === 0) return [];
+  return states.filter((st) => matchesAll(terms, normalise([st.name, st.nameTa, st.local, st.slug.replace(/-/g, ' ')].join(' '))));
+}
+
+/** Screen 1: schemes by name only (short name, English and Tamil names), across all states. */
+export function searchSchemeNames(query: string): Scheme[] {
+  const terms = termsOf(query);
+  if (terms.length === 0) return [];
+  return published
+    .filter((s) => matchesAll(terms, normalise([s.shortName, s.nameEn, s.nameTa].join(' '))))
+    .sort(order);
+}
+
+/** Everyday words people may type for each persona, in English and Tamil. */
+const personaWords: Record<string, string[]> = {
+  msme: ['business', 'shop', 'shopkeeper', 'enterprise', 'industry', 'small', 'micro', 'medium', 'self employed', 'startup', 'trader', 'வணிகம்', 'தொழில்', 'கடை', 'வியாபாரம்'],
+  farmer: ['farm', 'farming', 'agriculture', 'crop', 'kisan', 'paddy', 'விவசாயம்', 'பயிர்', 'உழவர்'],
+  home: ['house', 'housing', 'build', 'construction', 'rent', 'flat', 'plot', 'வீடு', 'கட்டுமானம்', 'குடியிருப்பு'],
+  student: ['school', 'college', 'scholarship', 'education', 'study', 'studies', 'university', 'கல்வி', 'பள்ளி', 'கல்லூரி', 'படிப்பு'],
+  woman: ['women', 'lady', 'ladies', 'mother', 'girl', 'self help group', 'shg', 'magalir', 'மகளிர்', 'தாய்', 'பெண்', 'பெண்கள்'],
+};
+
+/** Screen 2: personas, by their label, hint or everyday words for them. */
+export function searchPersonas(query: string): Persona[] {
+  const terms = termsOf(query);
+  if (terms.length === 0) return [];
+  return personas.filter((p) =>
+    matchesAll(terms, normalise([p.key, p.labelEn, p.labelTa, p.hintEn, p.hintTa, ...(personaWords[p.slug] ?? [])].join(' '))),
+  );
+}
+
+/** Screen 3: only the schemes for the chosen state and persona. */
+export function searchPersonaSchemes(stateName: string, personaKey: string, query: string): Scheme[] {
+  return rankSchemes(byPersona(stateName, personaKey), query);
 }

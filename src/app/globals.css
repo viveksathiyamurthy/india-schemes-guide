@@ -195,6 +195,89 @@ h2 {
   gap: 8px;
 }
 
+/* Search with live suggestions (screens 1 and 2) */
+.srchWrap {
+  position: relative;
+}
+
+.suggest {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(29, 26, 58, 0.18);
+}
+
+.suggest h3 {
+  margin: 6px 8px 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--grey);
+}
+
+.suggest ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.suggest a,
+.suggest .off {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  min-height: 44px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.suggest a:hover,
+.suggest a:focus-visible {
+  background: var(--accent-soft);
+}
+
+.suggest b {
+  font-weight: 800;
+}
+
+.suggest small {
+  flex-basis: 100%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--grey);
+}
+
+.suggest em {
+  font-style: normal;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--grey);
+}
+
+.suggest em.open {
+  color: #b2401d;
+}
+
+.suggest .off {
+  color: var(--grey);
+}
+
+.suggest .none {
+  margin: 6px 8px;
+  font-weight: 700;
+  color: var(--grey);
+}
+
+.chip.off {
+  opacity: 0.7;
+}
+
 .inp {
   flex: 1;
   min-width: 0;
@@ -254,33 +337,47 @@ h2 {
   overflow: hidden;
   background: #fff;
   border: 2px solid var(--accent-line);
-  border-radius: 22px;
-  padding: 16px 44px 16px 16px;
+  border-radius: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  color: var(--ink);
   text-decoration: none;
 }
 
-.card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  border-style: solid;
-  border-width: 0 30px 30px 0;
-  border-color: transparent var(--accent) transparent transparent;
+.card:hover {
+  border-color: var(--accent);
+}
+
+.card .more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f4e6da;
+  font-size: 14px;
+  font-weight: 800;
+  color: #b2401d;
+}
+
+.card .more span {
+  font-size: 22px;
+  line-height: 1;
 }
 
 .card b {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
+  line-height: 1.2;
 }
 
 .card .d {
-  font-size: 14px;
-  color: var(--grey);
-  font-weight: 500;
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: #4f4b63;
+  font-weight: 600;
 }
 
 .tags {
@@ -797,6 +894,148 @@ html.zooming {
   color: #e4572e;
 }
 
+/* ================= Screen 3: scheme list ================= */
+/* After choosing a state and a persona: the state's own painted scene. Its landmarks sit
+   along the top (and down the left on desktop); the list sits on the calm part of it. */
+.stateList {
+  position: relative;
+  container-type: inline-size;
+}
+
+/* Phone: the tall picture at the top of the page; the plain sand carries on below it */
+.sceneBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: #d5a57c;
+}
+
+.sceneBg picture img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* The persona stands on the sand, just right of the அ */
+.sceneBg .char {
+  position: absolute;
+  left: 34cqw;
+  top: 40cqw;
+  width: 40cqw;
+  height: 52cqw;
+  transform: translateX(-50%);
+}
+
+.listColumn {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 12px 0;
+}
+
+.withScene .listColumn {
+  padding-top: 95cqw;
+}
+
+.listTop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.withScene .listTop {
+  padding: 12px 14px 14px;
+  border-radius: 18px;
+  background: rgba(255, 249, 241, 0.94);
+  box-shadow: 0 8px 24px rgba(60, 40, 20, 0.18);
+}
+
+.listCards {
+  scroll-margin-top: 8px;
+}
+
+.withScene .listCards {
+  padding-bottom: 24px;
+}
+
+.f i {
+  font-style: normal;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Header, disclaimer and footer turn see-through over the scene */
+html.scene .top,
+html.scene .strip {
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 249, 241, 0.93);
+}
+
+html.scene .foot-note {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  background: rgba(255, 249, 241, 0.88);
+}
+
+@media (min-width: 900px) {
+  /* Desktop: the wide picture covers the screen. Landmarks run across the top and down
+     the left; the list sits over the calm beach and sea on the right. */
+  .sceneBg {
+    position: fixed;
+  }
+
+  .sceneBg picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center bottom;
+  }
+
+  .sceneBg .char {
+    left: 29%;
+    top: auto;
+    bottom: 2.5vh;
+    width: 220px;
+    height: min(300px, 34vh);
+  }
+
+  .withScene .listColumn {
+    width: 480px;
+    /* The page sits in a centred column; reach past it to 60px from the screen's right edge */
+    margin: 20vh min(60px, calc(60px - (100vw - 100%) / 2)) 0 auto;
+    padding: 18px 18px 28px;
+    border-radius: 22px 22px 0 0;
+    background: rgba(255, 249, 241, 0.9);
+    box-shadow: 0 10px 30px rgba(30, 40, 60, 0.2);
+  }
+
+  .withScene .listTop {
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .stateList:not(.withScene) .listColumn {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 24px 32px 40px;
+  }
+
+  .stateList:not(.withScene) .cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .card {
+    padding: 20px;
+  }
+}
+
 /* ================= Characters ================= */
 .ch-img {
   display: block;
@@ -809,23 +1048,6 @@ html.zooming {
   -webkit-user-drag: none;
 }
 
-/* List screen opens with a gentle rise */
-.cards .card {
-  animation: rise 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.1) both;
-}
-
-.cards .card:nth-child(2) {
-  animation-delay: 80ms;
-}
-.cards .card:nth-child(3) {
-  animation-delay: 160ms;
-}
-.cards .card:nth-child(4) {
-  animation-delay: 240ms;
-}
-.cards .card:nth-child(n + 5) {
-  animation-delay: 320ms;
-}
 
 /* ================= Larger screens ================= */
 @media (min-width: 760px) {

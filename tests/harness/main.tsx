@@ -11,8 +11,7 @@ function Route() {
   const sp = new URLSearchParams(window.location.search);
   if (parts.length === 0) return <WelcomeView />;
   if (parts[0] === 'search') {
-    const found = findState(sp.get('state') ?? '');
-    return <SearchView query={(sp.get('q') ?? '').slice(0, 100)} state={found && found.available ? found : undefined} />;
+    return <SearchView query={(sp.get('q') ?? '').slice(0, 100)} />;
   }
   if (parts[0] === 'scheme' && parts.length === 2) {
     const scheme = getScheme(parts[1]);
