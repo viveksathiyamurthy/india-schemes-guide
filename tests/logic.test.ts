@@ -5,9 +5,17 @@ import { schemes } from '../src/data/schemes';
 
 const names = (list: { shortName: string }[]) => list.map((s) => s.shortName);
 
-// Publishing rule: the breakfast scheme has no official link, so it is held back.
-assert.equal(schemes.length, 9);
+// Publishing rule: the breakfast scheme has no official link, and rows marked
+// "Needs review" in the sheet are held back until verified.
+assert.equal(schemes.length, 25);
 assert.equal(published.length, 8);
+assert.ok(published.every((s) => s.reviewStatus === 'Verified'));
+assert.ok(!published.some((s) => s.userTypes.includes('Senior Citizen')), 'no verified Senior Citizen scheme yet');
+// Every page address is unique, and existing addresses did not move.
+assert.equal(new Set(schemes.map((s) => s.slug)).size, schemes.length);
+assert.deepEqual(schemes.slice(0, 9).map((s) => s.slug), ['pm-kisan', 'pmegp', 'pmay-urban-2', 'pm-vidyalaxmi', 'magalir-urimai-thogai', 'kamarajar-breakfast-scheme', 'needs', 'mahalir-thittam', 'day-nrlm']);
+// Union/Central schemes carry Malayalam, Telugu and Kannada text for the other states.
+assert.ok(schemes[0].translations?.ml?.name && schemes[0].translations?.te?.name && schemes[0].translations?.kn?.name);
 assert.ok(!published.some((s) => s.slug === 'kamarajar-breakfast-scheme'));
 
 // Screen 3: Tamil Nadu + Woman -> State Government first, then Union/Central.

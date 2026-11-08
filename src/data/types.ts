@@ -29,4 +29,15 @@ export interface Scheme {
   /** YYYY-MM-DD */
   lastVerified: string;
   reviewStatus: string;
+  /** Malayalam (ml), Telugu (te) and Kannada (kn) text, where the sheet has it. */
+  translations?: Partial<Record<'ml' | 'te' | 'kn', SchemeText>>;
+}
+
+export interface SchemeText {
+  name?: string;
+  summary?: string;
+  benefit?: string;
+  eligibility?: string;
+  documents?: string;
+  howToApply?: string;
 }

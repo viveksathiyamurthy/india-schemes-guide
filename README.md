@@ -28,7 +28,15 @@ npm run build
 
 ## Update scheme data
 
-Edit `src/data/schemes.ts` (one entry per sheet row). Field names follow the sheet columns. To add a state or a persona, edit `src/data/config.ts`. Interface text in English and Tamil is in `src/lib/ui.ts`.
+The scheme data comes from the "India Schemes Guide - Data" Google Sheet (tab "Schemes"). To update it:
+
+1. In the sheet, choose File > Download > Comma-separated values (.csv).
+2. Run `node scripts/build-schemes.mjs <downloaded file>.csv`. It rewrites `src/data/schemes.ts`; do not edit that file by hand.
+3. Run the tests (below), then commit.
+
+Only rows that are Active, marked Verified and have an official link appear on the site. The sheet has no short name or page address, so the script uses the name before the first bracket; `OVERRIDES` in the script keeps existing page addresses in place.
+
+To add a state or a persona, edit `src/data/config.ts`. Interface text in English and Tamil is in `src/lib/ui.ts`.
 
 The Tamil interface text was written by Claude and needs review by a native Tamil speaker.
 
