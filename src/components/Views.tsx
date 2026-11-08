@@ -49,8 +49,8 @@ export function WelcomeView() {
  * order of `personas` (scripts/build-persona-road.py). Rows are where each place starts, in
  * image pixels; the road runs down at ROAD.x.
  */
-const ROAD = { w: 1456, h: 3210, x: 365 };
-const ROAD_ROWS = [0, 695, 1295, 1895, 2495, 3210];
+const ROAD = { w: 1456, h: 4410, x: 365 };
+const ROAD_ROWS = [0, 695, 1295, 1895, 2495, 3095, 3695, 4410];
 
 /* Screen 2: choose a persona. One row per persona, down the road; scroll up and down. */
 export function PersonaView({ state }: { state: StateInfo }) {
@@ -76,7 +76,7 @@ export function PersonaView({ state }: { state: StateInfo }) {
         <ul>
           {personas.map((p, i) => (
             <li key={p.slug} style={{ top: pct(ROAD_ROWS[i]), height: pct(ROAD_ROWS[i + 1] - ROAD_ROWS[i]) }}>
-              <Link href={`/${state.slug}/${p.slug}`} className="who">
+              <Link href={`/${state.slug}/${p.slug}`} className={`who k-${p.character}`}>
                 <span className="char">
                   <Character kind={p.character} />
                 </span>

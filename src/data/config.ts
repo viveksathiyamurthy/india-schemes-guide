@@ -32,7 +32,7 @@ export interface Persona {
   /** Must match a value in the "user_types" column of the data sheet. */
   key: string;
   /** Which drawn character stands next to this choice. */
-  character: 'msme' | 'farmer' | 'home' | 'student' | 'woman';
+  character: 'msme' | 'farmer' | 'home' | 'student' | 'woman' | 'senior' | 'others';
   labelEn: string;
   labelTa: string;
   hintEn: string;
@@ -45,6 +45,8 @@ export const personas: Persona[] = [
   { slug: 'home', key: 'Home seeker / House owner', character: 'home', labelEn: 'Home seeker / House owner', labelTa: 'வீடு தேடுபவர் / வீட்டு உரிமையாளர்', hintEn: 'Housing support', hintTa: 'வீட்டு வசதி உதவி' },
   { slug: 'student', key: 'Student', character: 'student', labelEn: 'Student', labelTa: 'மாணவர்', hintEn: 'Scholarships and education loans', hintTa: 'கல்வி உதவித்தொகை, கல்விக் கடன்' },
   { slug: 'woman', key: 'Woman', character: 'woman', labelEn: 'Woman', labelTa: 'மகளிர்', hintEn: 'Monthly support and self help groups', hintTa: 'மாதாந்திர உதவி, சுய உதவிக் குழுக்கள்' },
+  { slug: 'senior', key: 'Senior Citizen', character: 'senior', labelEn: 'Senior Citizen', labelTa: 'மூத்த குடிமக்கள்', hintEn: 'Pensions and support for older people', hintTa: 'முதியோருக்கான ஓய்வூதியம், உதவிகள்' },
+  { slug: 'others', key: 'Others', character: 'others', labelEn: 'Others', labelTa: 'மற்றவர்கள்', hintEn: 'Workers, differently abled people and more', hintTa: 'தொழிலாளர்கள், மாற்றுத்திறனாளிகள் மற்றும் பலர்' },
 ];
 
 export const findState = (slug: string) => states.find((s) => s.slug === slug);
