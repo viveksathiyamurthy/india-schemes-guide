@@ -5,13 +5,13 @@ import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react'
 import { useLang } from '@/lib/lang';
 import { ui } from '@/lib/ui';
 import { formatDate } from '@/lib/text';
-import { byPersona, searchSchemes } from '@/lib/search';
+import { byPersona, searchPersonaSchemes, searchSchemeNames, searchStates } from '@/lib/search';
 import { personas, states, type Persona, type StateInfo } from '@/data/config';
 import type { Scheme } from '@/data/types';
 import { Character } from './Characters';
 import { StateMap } from './StateMap';
 import { EarthIntro, webglWorks } from './EarthIntro';
-import { BackButton, BackLink, LevelTag, PlaceTag, RichText, SchemeCard, SearchBar } from './Parts';
+import { BackButton, BackLink, HomeSearch, LevelTag, ListSearch, PersonaSearch, PlaceTag, RichText, SchemeCard } from './Parts';
 
 /* Screen 1: welcome, search and choose a state on the map */
 export function WelcomeView() {
@@ -36,7 +36,7 @@ export function WelcomeView() {
       <div className="intro">
         <h1>{t(ui.welcomeTitle)}</h1>
         <p className="sub">{t(ui.welcomeSub)}</p>
-        <SearchBar />
+        <HomeSearch />
         <h2 className="mapTitle">{t(ui.chooseState)}</h2>
       </div>
       {view === 'planet' ? <EarthIntro calm={calm} onFail={() => setView('flat')} onReady={() => document.documentElement.classList.add('spaceReady')} /> : view === 'flat' ? <StateMap /> : <div className="planetStage"><div className="planetBox" /></div>}
@@ -68,7 +68,7 @@ export function PersonaView({ state }: { state: StateInfo }) {
         </div>
         <h1>{t(ui.whoAreYou)}</h1>
         <p className="sub personaSub">{t(ui.personaIntro).replace('{state}', tr(state.name, state.nameTa))}</p>
-        <SearchBar stateSlug={state.slug} />
+        <PersonaSearch state={state} />
       </div>
       <div className="road" style={{ aspectRatio: `${ROAD.w} / ${ROAD.h}`, '--road-x': `${(ROAD.x / ROAD.w) * 100}%` } as CSSProperties}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -104,79 +104,119 @@ function countText(n: number, t: (x: { en: string; ta: string }) => string) {
   return `${n} ${n === 1 ? t(ui.schemeCount1) : t(ui.schemesCount)}`;
 }
 
-/* Screen 3: list for a chosen state and persona */
+/* Screen 3: list for a chosen state and persona, over the state's own scene. Search only narrows this list. */
 export function ListView({ state, persona }: { state: StateInfo; persona: Persona }) {
   const { t, tr } = useLang();
   const [filter, setFilter] = useState<Filter>('all');
+  const [q, setQ] = useState('');
   useEffect(() => {
     document.documentElement.classList.remove('zooming');
   }, []);
-  const all = byPersona(state.name, persona.key);
-  const shown = all.filter((s) =>
-    filter === 'all' ? true : filter === 'state' ? s.level === 'State Government' : s.level === 'Union/Central Government',
-  );
+  // Over a state's scene, the header and disclaimer strip turn see-through.
+  useLayoutEffect(() => {
+    if (!state.scene) return;
+    const root = document.documentElement;
+    root.classList.add('scene');
+    return () => root.classList.remove('scene');
+  }, [state.scene]);
+  const matched = searchPersonaSchemes(state.name, persona.key, q);
+  const isUnion = (s: Scheme) => s.level === 'Union/Central Government';
+  const shown = matched.filter((s) => (filter === 'all' ? true : filter === 'state' ? !isUnion(s) : isUnion(s)));
   const scope = t(ui.scopeState).replace('{state}', tr(state.name, state.nameTa));
-  const filters: { id: Filter; label: string }[] = [
-    { id: 'all', label: t(ui.filterAll) },
-    { id: 'state', label: t(ui.stateGov) },
-    { id: 'union', label: t(ui.unionGov) },
+  const placeholder = t(ui.listSearchPlaceholder)
+    .replace('{persona}', tr(persona.labelEn, persona.labelTa))
+    .replace('{state}', tr(state.name, state.nameTa));
+  const filters: { id: Filter; label: string; n: number }[] = [
+    { id: 'all', label: t(ui.filterAll), n: matched.length },
+    { id: 'state', label: t(ui.stateGov), n: matched.filter((s) => !isUnion(s)).length },
+    { id: 'union', label: t(ui.unionGov), n: matched.filter(isUnion).length },
   ];
   return (
-    <div className="page">
-      <BackLink href={`/${state.slug}`}>{t(ui.changePersona)}</BackLink>
-      <div>
-        <h1>
-          {tr(state.name, state.nameTa)} &middot; {tr(persona.labelEn, persona.labelTa)}
-        </h1>
-        <p className="sub">
-          {countText(shown.length, t)} {scope}
-        </p>
-      </div>
-      <SearchBar stateSlug={state.slug} />
-      <div className="row" role="group" aria-label="Filter">
-        {filters.map((f) => (
-          <button key={f.id} type="button" className={filter === f.id ? 'f on' : 'f'} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
-            {f.label}
-          </button>
-        ))}
-      </div>
-      {shown.length === 0 ? <p className="empty">{t(ui.noResults)}</p> : null}
-      <div className="cards">
-        {shown.map((s) => (
-          <SchemeCard key={s.id} scheme={s} />
-        ))}
+    <div className={state.scene ? 'stateList withScene' : 'stateList'}>
+      {state.scene ? (
+        <div className="sceneBg" aria-hidden="true">
+          <picture>
+            <source media="(min-width: 900px)" srcSet={`/states/${state.slug}-wide.jpg`} />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={`/states/${state.slug}-tall.jpg`} alt="" />
+          </picture>
+          <span className="char">
+            <Character kind={persona.character} />
+          </span>
+        </div>
+      ) : null}
+      <div className="listColumn">
+        <div className="listTop">
+          <BackLink href={`/${state.slug}`}>{t(ui.changePersona)}</BackLink>
+          <div>
+            <h1>
+              {tr(state.name, state.nameTa)} &middot; {tr(persona.labelEn, persona.labelTa)}
+            </h1>
+            <p className="sub" aria-live="polite">
+              {countText(shown.length, t)} {scope}
+            </p>
+          </div>
+          <ListSearch value={q} onChange={setQ} placeholder={placeholder} />
+          <div className="row filters" role="group" aria-label="Filter">
+            {filters.map((f) => (
+              <button key={f.id} type="button" className={filter === f.id ? 'f on' : 'f'} aria-pressed={filter === f.id} onClick={() => setFilter(f.id)}>
+                {f.label} <i>{f.n}</i>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div id="schemes" className="listCards">
+          {shown.length === 0 ? <p className="empty">{t(ui.noResults)}</p> : null}
+          <div className="cards">
+            {shown.map((s) => (
+              <SchemeCard key={s.id} scheme={s} />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-/* Screen 3 (search): results for a search text, with or without a state */
-export function SearchView({ query, state }: { query: string; state?: StateInfo }) {
+/* Search results from screen 1: states and schemes whose name matches */
+export function SearchView({ query }: { query: string }) {
   const { t, tr } = useLang();
-  const results = searchSchemes(query, state?.name);
-  const scope = state ? t(ui.scopeState).replace('{state}', tr(state.name, state.nameTa)) : t(ui.scopeAll);
+  const foundStates = searchStates(query);
+  const foundSchemes = searchSchemeNames(query);
   return (
     <div className="page">
-      <BackButton fallbackHref={state ? `/${state.slug}` : '/'} />
-      <SearchBar stateSlug={state?.slug} defaultValue={query} />
-      <div>
-        <h1>{query ? `${t(ui.resultsFor)} "${query}"` : t(ui.allSchemes)}</h1>
-        <p className="sub">
-          {countText(results.length, t)} {scope}
-        </p>
-      </div>
-      {!state ? (
-        <div className="note">
-          <span>{t(ui.noStateNote)}</span>
-          <Link href="/">{t(ui.chooseStateButton)}</Link>
-        </div>
+      <BackButton fallbackHref="/" />
+      <HomeSearch defaultValue={query} live={false} />
+      <h1>{query ? `${t(ui.resultsFor)} "${query}"` : t(ui.allSchemes)}</h1>
+      {foundStates.length + foundSchemes.length === 0 ? <p className="empty">{t(ui.noMatch)}</p> : null}
+      {foundStates.length ? (
+        <section className="sec">
+          <h2>{t(ui.groupStates)}</h2>
+          <div className="row">
+            {foundStates.map((st) =>
+              st.available ? (
+                <Link key={st.slug} href={`/${st.slug}`} className="chip">
+                  {tr(st.name, st.nameTa)} &middot; {t(ui.openNow)}
+                </Link>
+              ) : (
+                <span key={st.slug} className="chip off">
+                  {tr(st.name, st.nameTa)} &middot; {t(ui.comingSoon)}
+                </span>
+              ),
+            )}
+          </div>
+        </section>
       ) : null}
-      {results.length === 0 ? <p className="empty">{t(ui.noResults)}</p> : null}
-      <div className="cards">
-        {results.map((s) => (
-          <SchemeCard key={s.id} scheme={s} showPlace={!state} />
-        ))}
-      </div>
+      {foundSchemes.length ? (
+        <section className="sec">
+          <h2>{t(ui.groupSchemes)}</h2>
+          <div className="cards">
+            {foundSchemes.map((s) => (
+              <SchemeCard key={s.id} scheme={s} showPlace />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

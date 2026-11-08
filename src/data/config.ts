@@ -12,10 +12,15 @@ export interface StateInfo {
   color: string;
   /** Text colour that is readable on `color`. */
   onColor: string;
+  /**
+   * The state has its own painted scene for screen 3: public/states/<slug>-wide.jpg (desktop)
+   * and public/states/<slug>-tall.jpg (phone).
+   */
+  scene?: boolean;
 }
 
 export const states: StateInfo[] = [
-  { slug: 'tamil-nadu', name: 'Tamil Nadu', nameTa: 'தமிழ்நாடு', local: 'தமிழ்நாடு', localLang: 'ta', available: true, color: '#CBD6E0', onColor: '#2B2540' },
+  { slug: 'tamil-nadu', name: 'Tamil Nadu', nameTa: 'தமிழ்நாடு', local: 'தமிழ்நாடு', localLang: 'ta', available: true, color: '#CBD6E0', onColor: '#2B2540', scene: true },
   { slug: 'kerala', name: 'Kerala', nameTa: 'கேரளா', local: 'കേരളം', localLang: 'ml', available: false, color: '#556578', onColor: '#FFFFFF' },
   { slug: 'karnataka', name: 'Karnataka', nameTa: 'கர்நாடகா', local: 'ಕರ್ನಾಟಕ', localLang: 'kn', available: false, color: '#8DA4BA', onColor: '#1F2433' },
   { slug: 'andhra-pradesh', name: 'Andhra Pradesh', nameTa: 'ஆந்திரப் பிரதேசம்', local: 'ఆంధ్ర ప్రదేశ్', localLang: 'te', available: false, color: '#FDC49F', onColor: '#2B2540' },
@@ -39,7 +44,7 @@ export const personas: Persona[] = [
   { slug: 'farmer', key: 'Farmer', character: 'farmer', labelEn: 'Farmer', labelTa: 'விவசாயி', hintEn: 'Income support for farming families', hintTa: 'விவசாயக் குடும்பங்களுக்கான வருமான உதவி' },
   { slug: 'home', key: 'Home seeker / House owner', character: 'home', labelEn: 'Home seeker / House owner', labelTa: 'வீடு தேடுபவர் / வீட்டு உரிமையாளர்', hintEn: 'Housing support', hintTa: 'வீட்டு வசதி உதவி' },
   { slug: 'student', key: 'Student', character: 'student', labelEn: 'Student', labelTa: 'மாணவர்', hintEn: 'Scholarships and education loans', hintTa: 'கல்வி உதவித்தொகை, கல்விக் கடன்' },
-  { slug: 'woman', key: 'Woman', character: 'woman', labelEn: 'Woman', labelTa: 'பெண்', hintEn: 'Monthly support and self help groups', hintTa: 'மாதாந்திர உதவி, சுய உதவிக் குழுக்கள்' },
+  { slug: 'woman', key: 'Woman', character: 'woman', labelEn: 'Woman', labelTa: 'மகளிர்', hintEn: 'Monthly support and self help groups', hintTa: 'மாதாந்திர உதவி, சுய உதவிக் குழுக்கள்' },
 ];
 
 export const findState = (slug: string) => states.find((s) => s.slug === slug);
