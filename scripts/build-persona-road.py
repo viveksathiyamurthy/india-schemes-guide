@@ -1,7 +1,7 @@
 # Builds public/personas/road.jpg, the screen 2 background.
-# Usage: python3 scripts/build-persona-road.py <folder with 1-msme.png ... 5-woman.png>
+# Usage: python3 scripts/build-persona-road.py <folder with 1-msme.png ... 7-others.png>
 # (writes persona-road.jpg and persona-road.json into that folder; copy the .jpg to public/personas/road.jpg
-# and the band rows into ROAD_ROWS in src/components/Views.tsx)
+# and the row boundaries it prints into ROAD_ROWS in src/components/Views.tsx)
 #
 # Stacks the five persona panels top to bottom into one tall background.
 # Each panel keeps its middle band (the scene); neighbours overlap inside their plain
@@ -13,8 +13,8 @@ import numpy as np
 from PIL import Image, ImageFilter
 
 d = sys.argv[1]
-names = ['1-msme', '2-farmer', '3-home', '4-student', '5-woman']
-KEEP = [(120, 880), (150, 880), (150, 880), (150, 880), (150, 930)]  # rows kept from each panel
+names = ['1-msme', '2-farmer', '3-home', '4-student', '5-woman', '6-senior', '7-others']
+KEEP = [(120, 880), (150, 880), (150, 880), (150, 880), (150, 880), (150, 880), (150, 930)]  # rows kept from each panel
 OVERLAP = 130
 P = [np.asarray(Image.open(f'{d}/{n}.png').convert('RGB')).astype(np.float32) for n in names]
 
@@ -106,3 +106,5 @@ img.save(f'{d}/persona-road.jpg', quality=86, optimize=True, progressive=True)
 img.resize((img.width // 4, img.height // 4)).save(f'{d}/persona-road-preview.jpg', quality=80)
 json.dump({'size': img.size, 'bands': bands}, open(f'{d}/persona-road.json', 'w'))
 print(img.size, bands)
+# Each row starts halfway through its overlap with the row above.
+print('ROAD_ROWS', [0] + [(bands[i][0] + bands[i - 1][1]) // 2 for i in range(1, len(bands))] + [img.size[1]])

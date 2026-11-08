@@ -851,6 +851,23 @@ html.zooming {
   pointer-events: none;
 }
 
+/* Others is a group of people, so it is wide: it stands at the left edge of its row */
+.who.k-others .char {
+  left: 1%;
+  bottom: 6%;
+  width: 50%;
+  height: 60%;
+  transform: none;
+}
+
+.who.k-others .char img {
+  object-position: left bottom;
+}
+
+.who.k-others .whoCard {
+  width: min(47%, 290px);
+}
+
 .who .whoCard {
   position: absolute;
   right: 3%;
