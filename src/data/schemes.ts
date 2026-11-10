@@ -31,7 +31,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://pmkisan.gov.in/",
     "applyLink": "https://pmkisan.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-10-18",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified",
     "translations": {
       "ml": {
@@ -86,7 +86,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.kviconline.gov.in/pmegpeportal/pmegphome/index.jsp",
     "applyLink": "https://www.kviconline.gov.in/pmegpeportal/jsp/pmegponline.jsp",
     "status": "Active",
-    "lastVerified": "2026-10-18",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified",
     "translations": {
       "ml": {
@@ -140,7 +140,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://pmay-urban.gov.in/",
     "applyLink": "https://pmay-urban.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-10-18",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified",
     "translations": {
       "ml": {
@@ -194,7 +194,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.myscheme.gov.in/schemes/pmvs",
     "applyLink": "https://www.myscheme.gov.in/schemes/pmvs",
     "status": "Active",
-    "lastVerified": "2026-10-18",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified",
     "translations": {
       "ml": {
@@ -248,7 +248,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://kmut.tn.gov.in",
     "applyLink": "https://kmut.tn.gov.in",
     "status": "Active",
-    "lastVerified": "2026-10-18",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified"
   },
   {
@@ -276,7 +276,7 @@ export const schemes: Scheme[] = [
     "officialLink": "",
     "applyLink": "",
     "status": "Active",
-    "lastVerified": "2026-10-19",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified"
   },
   {
@@ -305,7 +305,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://msmeonline.tn.gov.in",
     "applyLink": "https://msmeonline.tn.gov.in",
     "status": "Active",
-    "lastVerified": "2026-10-19",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified"
   },
   {
@@ -333,7 +333,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://ariyalur.nic.in/departments/mahalir-thittam/",
     "applyLink": "",
     "status": "Active",
-    "lastVerified": "2026-10-22",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified"
   },
   {
@@ -361,7 +361,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://aajeevika.gov.in/",
     "applyLink": "",
     "status": "Active",
-    "lastVerified": "2026-10-22",
+    "lastVerified": "2026-11-10",
     "reviewStatus": "Verified",
     "translations": {
       "ml": {
@@ -415,8 +415,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 11,
@@ -443,8 +443,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 12,
@@ -471,8 +471,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.cra.tn.gov.in/about_schemes.php",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 13,
@@ -499,8 +499,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.cra.tn.gov.in/about_schemes.php",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 14,
@@ -527,8 +527,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.cra.tn.gov.in/about_schemes.php",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 15,
@@ -555,8 +555,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.cra.tn.gov.in/about_schemes.php",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 16,
@@ -584,8 +584,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://oap.tn.gov.in/cmupt",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 17,
@@ -612,8 +612,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.cra.tn.gov.in/about_schemes.php",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 18,
@@ -640,8 +640,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://labour.tn.gov.in/uwwb",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 19,
@@ -670,8 +670,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 20,
@@ -698,8 +698,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 21,
@@ -726,8 +726,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 22,
@@ -754,8 +754,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 23,
@@ -782,8 +782,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 24,
@@ -810,8 +810,8 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   },
   {
     "id": 25,
@@ -839,7 +839,7 @@ export const schemes: Scheme[] = [
     "officialLink": "https://www.tnesevai.tn.gov.in/",
     "applyLink": "https://www.tnesevai.tn.gov.in/",
     "status": "Active",
-    "lastVerified": "2026-11-06",
-    "reviewStatus": "Needs review"
+    "lastVerified": "2026-11-10",
+    "reviewStatus": "Verified"
   }
 ];

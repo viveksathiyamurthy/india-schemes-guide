@@ -5,12 +5,12 @@ import { schemes } from '../src/data/schemes';
 
 const names = (list: { shortName: string }[]) => list.map((s) => s.shortName);
 
-// Publishing rule: the breakfast scheme has no official link, and rows marked
-// "Needs review" in the sheet are held back until verified.
+// Publishing rule: only Active + Verified rows with an official link show.
+// All 25 rows are verified; the breakfast scheme has no official link, so 24 show.
 assert.equal(schemes.length, 25);
-assert.equal(published.length, 8);
-assert.ok(published.every((s) => s.reviewStatus === 'Verified'));
-assert.ok(!published.some((s) => s.userTypes.includes('Senior Citizen')), 'no verified Senior Citizen scheme yet');
+assert.equal(published.length, 24);
+assert.ok(published.every((s) => s.reviewStatus === 'Verified' && s.status === 'Active' && s.officialLink));
+assert.ok(published.some((s) => s.userTypes.includes('Senior Citizen')), 'Senior Citizen schemes now show');
 // Every page address is unique, and existing addresses did not move.
 assert.equal(new Set(schemes.map((s) => s.slug)).size, schemes.length);
 assert.deepEqual(schemes.slice(0, 9).map((s) => s.slug), ['pm-kisan', 'pmegp', 'pmay-urban-2', 'pm-vidyalaxmi', 'magalir-urimai-thogai', 'kamarajar-breakfast-scheme', 'needs', 'mahalir-thittam', 'day-nrlm']);
@@ -19,9 +19,12 @@ assert.ok(schemes[0].translations?.ml?.name && schemes[0].translations?.te?.name
 assert.ok(!published.some((s) => s.slug === 'kamarajar-breakfast-scheme'));
 
 // Screen 3: Tamil Nadu + Woman -> State Government first, then Union/Central.
-assert.deepEqual(names(byPersona('Tamil Nadu', 'Woman')), ['Magalir Urimai Thogai', 'NEEDS', 'Mahalir Thittam (TNSRLM)', 'PMEGP', 'DAY-NRLM']);
-assert.deepEqual(names(byPersona('Tamil Nadu', 'Farmer')), ['PM-KISAN']);
-assert.deepEqual(names(byPersona('Tamil Nadu', 'Student')), ['PM-Vidyalaxmi']);
+assert.deepEqual(names(byPersona('Tamil Nadu', 'Woman')), ['Magalir Urimai Thogai', 'NEEDS', 'Mahalir Thittam (TNSRLM)', 'Destitute Widow Pension Scheme', 'Destitute Deserted Woman Pension Scheme', 'Unmarried Women Pension Scheme', 'Income Certificate', 'Widow Certificate', 'PMEGP', 'DAY-NRLM']);
+assert.equal(byPersona('Tamil Nadu', 'Farmer').length, 6);
+assert.equal(names(byPersona('Tamil Nadu', 'Farmer')).at(-1), 'PM-KISAN');
+assert.equal(byPersona('Tamil Nadu', 'Student').length, 6);
+assert.equal(byPersona('Tamil Nadu', 'Senior Citizen').length, 2);
+assert.equal(byPersona('Tamil Nadu', 'Others').length, 3);
 assert.deepEqual(names(byPersona('Tamil Nadu', 'Home seeker / House owner')), ['PMAY-Urban 2.0']);
 assert.deepEqual(names(byPersona('Tamil Nadu', 'MSME')), ['NEEDS', 'PMEGP']);
 
@@ -33,10 +36,10 @@ assert.ok(inScope(schemes[4], 'Tamil Nadu'));
 assert.ok(inScope(schemes[4]));
 
 // Search with no state: all states + Union/Central.
-assert.deepEqual(names(searchSchemes('loan')).sort(), ['DAY-NRLM', 'Mahalir Thittam (TNSRLM)', 'NEEDS', 'PM-Vidyalaxmi', 'PMAY-Urban 2.0', 'PMEGP']);
+assert.deepEqual(names(searchSchemes('loan')).sort(), ['DAY-NRLM', 'Mahalir Thittam (TNSRLM)', 'NEEDS', 'PM-Vidyalaxmi', 'PMAY-Urban 2.0', 'PMEGP', 'Small / Marginal Farmer Certificate']);
 // Search with a state: only that state + Union/Central.
 assert.deepEqual(names(searchSchemes('loan', 'Kerala')).sort(), ['DAY-NRLM', 'PM-Vidyalaxmi', 'PMAY-Urban 2.0', 'PMEGP']);
-assert.deepEqual(names(searchSchemes('loan', 'Tamil Nadu')).sort(), ['DAY-NRLM', 'Mahalir Thittam (TNSRLM)', 'NEEDS', 'PM-Vidyalaxmi', 'PMAY-Urban 2.0', 'PMEGP']);
+assert.deepEqual(names(searchSchemes('loan', 'Tamil Nadu')).sort(), ['DAY-NRLM', 'Mahalir Thittam (TNSRLM)', 'NEEDS', 'PM-Vidyalaxmi', 'PMAY-Urban 2.0', 'PMEGP', 'Small / Marginal Farmer Certificate']);
 // Name match ranks first; every typed word must match.
 assert.equal(searchSchemes('kisan')[0].shortName, 'PM-KISAN');
 assert.deepEqual(searchSchemes('zzzz'), []);
@@ -44,7 +47,7 @@ assert.deepEqual(names(searchSchemes('pm kisan')), ['PM-KISAN']);
 // Tamil search works.
 assert.deepEqual(names(searchSchemes('மகளிர் உரிமைத்')), ['Magalir Urimai Thogai']);
 // Empty query lists everything in scope.
-assert.equal(searchSchemes('').length, 8);
+assert.equal(searchSchemes('').length, 24);
 assert.equal(searchSchemes('', 'Kerala').length, 5);
 assert.equal(getScheme('pm-kisan')?.shortName, 'PM-KISAN');
 assert.equal(getScheme('kamarajar-breakfast-scheme'), undefined);
