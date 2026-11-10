@@ -172,10 +172,13 @@ export function BackButton({ fallbackHref = '/', children }: { fallbackHref?: st
   );
 }
 
-export function BackLink({ href, children }: { href: string; children: ReactNode }) {
+export function BackLink({ href, children, outlined = false }: { href: string; children: ReactNode; outlined?: boolean }) {
   return (
-    <Link href={href} className="back">
-      &larr; {children}
+    <Link href={href} className={outlined ? 'back outlined' : 'back'}>
+      <span className="arr" aria-hidden="true">
+        &larr;
+      </span>{' '}
+      {children}
     </Link>
   );
 }

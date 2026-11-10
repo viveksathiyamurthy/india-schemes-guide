@@ -147,7 +147,9 @@ export function ListView({ state, persona }: { state: StateInfo; persona: Person
       ) : null}
       <div className="listColumn">
         <div className="listTop">
-          <BackLink href={`/${state.slug}`}>{t(ui.changePersona)}</BackLink>
+          <BackLink href={`/${state.slug}`} outlined>
+            {t(ui.changePersona)}
+          </BackLink>
           <div>
             <h1>
               {tr(state.name, state.nameTa)} &middot; {tr(persona.labelEn, persona.labelTa)}

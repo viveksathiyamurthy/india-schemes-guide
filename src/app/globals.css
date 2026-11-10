@@ -179,6 +179,40 @@ h2 {
   cursor: pointer;
 }
 
+/* Screen 3 "Change persona": a thin rounded outline that turns into a soft orange
+   rectangle under the mouse pointer */
+.back.outlined {
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  transition: border-radius 0.25s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.back.outlined .arr {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.back.outlined:hover {
+  border-radius: 4px;
+  border-color: #d4917a;
+  background: #f0b8a2;
+  color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(160, 90, 60, 0.2);
+}
+
+.back.outlined:hover .arr {
+  transform: translateX(-4px);
+}
+
+.back.outlined:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 .chip {
   align-self: flex-start;
   background: var(--accent-soft);
