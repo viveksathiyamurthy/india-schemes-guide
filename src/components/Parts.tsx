@@ -199,10 +199,11 @@ export function stateTa(name: string): string | undefined {
   return states.find((s) => s.name === name)?.nameTa;
 }
 
-export function SchemeCard({ scheme, showPlace = false }: { scheme: Scheme; showPlace?: boolean }) {
+/** `from` ("tamil-nadu/woman") lets screen 4 link back to the list it was opened from. */
+export function SchemeCard({ scheme, showPlace = false, from }: { scheme: Scheme; showPlace?: boolean; from?: string }) {
   const { t, tr } = useLang();
   return (
-    <Link href={`/scheme/${scheme.slug}`} className="card">
+    <Link href={from ? `/scheme/${scheme.slug}?from=${from}` : `/scheme/${scheme.slug}`} className="card">
       <span className="tags">
         <LevelTag scheme={scheme} />
         {showPlace ? <PlaceTag scheme={scheme} /> : null}

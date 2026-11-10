@@ -53,6 +53,7 @@ export const ui = {
   changeState: { en: 'Change state', ta: 'மாநிலத்தை மாற்று' },
   changePersona: { en: 'Change persona', ta: 'வகையை மாற்று' },
   back: { en: 'Back', ta: 'பின்செல்' },
+  backTo: { en: 'Back to {place}', ta: '{place} – பின்செல்' },
   filterAll: { en: 'All', ta: 'அனைத்தும்' },
   stateGov: { en: 'State Government', ta: 'மாநில அரசு' },
   unionGov: { en: 'Union/Central Government', ta: 'ஒன்றிய/மத்திய அரசு' },
