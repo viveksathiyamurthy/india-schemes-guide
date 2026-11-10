@@ -168,6 +168,7 @@ h2 {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   min-height: 44px;
   padding: 0;
   border: 0;
@@ -177,6 +178,40 @@ h2 {
   font-weight: 800;
   text-decoration: none;
   cursor: pointer;
+}
+
+/* Screen 3 "Change persona": a thin rounded outline that turns into a soft orange
+   rectangle under the mouse pointer */
+.back.outlined {
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  transition: border-radius 0.25s ease, background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.back.outlined .arr {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.back.outlined:hover {
+  border-radius: 4px;
+  border-color: #d4917a;
+  background: #f0b8a2;
+  color: var(--ink);
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(160, 90, 60, 0.2);
+}
+
+.back.outlined:hover .arr {
+  transform: translateX(-4px);
+}
+
+.back.outlined:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .chip {
@@ -432,34 +467,105 @@ h2 {
   font-weight: 800;
 }
 
-/* Detail */
+/* ================= Screen 4: scheme detail (no images; 85% of the width) ================= */
+.detail {
+  /* 85% of the screen, reaching past the site's centre column on wide screens */
+  width: 85vw;
+  max-width: none;
+  margin-left: calc(50% - 42.5vw);
+  margin-right: calc(50% - 42.5vw);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.detailHead {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailHead h1 {
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+/* What you get: always under the name, full width */
+.getBox {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: var(--ink);
+  color: #fff;
+}
+
+.getBox h2 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffd28f;
+}
+
+.getBox p,
+.getBox li {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.getBox ul,
+.getBox ol {
+  margin: 0;
+  padding-left: 22px;
+}
+
+.getBox .pending {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e3e0ef;
+}
+
+.detailPair {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .sec {
   background: #fff;
   border: 2px solid var(--accent-line);
   border-radius: 18px;
-  padding: 12px 14px;
+  padding: 16px;
 }
 
 .sec h2 {
-  font-size: 15px;
-  margin-bottom: 6px;
+  font-size: 18px;
+  font-weight: 900;
+  margin: 0 0 10px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-.sec h2::before {
-  content: '';
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--accent);
-  flex: 0 0 10px;
+.sec h2 .ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: #b2401d;
 }
 
 .sec p,
 .sec li {
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 600;
   margin: 0 0 6px;
 }
 
@@ -474,11 +580,96 @@ h2 {
   font-style: italic;
 }
 
+.checklist,
+.steps {
+  list-style: none;
+  padding-left: 0 !important;
+}
+
+.checklist li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.checklist svg {
+  flex: none;
+  margin-top: 2px;
+  color: #2e7d5b;
+}
+
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.steps li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0;
+}
+
+.steps li p {
+  margin: 0;
+}
+
+.steps .num {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+/* The official website, always last */
 .cta {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 18px;
+  background: var(--accent-soft);
+  border: 2px solid var(--accent);
+  text-align: center;
+}
+
+.ctaNote {
+  margin: 0;
+  font-weight: 800;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.ctaText .sub {
+  margin: 4px 0 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ctaButtons {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
-  margin-top: 4px;
+}
+
+.btn.go {
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 14px;
+  background: #e4572e;
+  line-height: 1.3;
+}
+
+.btn.go svg {
+  flex: none;
 }
 
 .btn {
@@ -529,17 +720,75 @@ h2 {
   }
 
   .detail {
-    max-width: 760px;
+    padding-left: 0;
+    padding-right: 0;
+    gap: 20px;
+  }
+
+  .detailHead h1 {
+    font-size: 44px;
+  }
+
+  .getBox {
+    padding: 22px 28px;
+  }
+
+  .getBox p,
+  .getBox li {
+    font-size: 22px;
+  }
+
+  .detailPair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .sec {
+    padding: 22px 24px;
+  }
+
+  .sec p,
+  .sec li {
+    font-size: 16px;
+  }
+
+  .sec-steps .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .sec-steps .steps li {
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 14px;
+    background: var(--paper);
+    border: 1px solid #f4e6da;
   }
 
   .cta {
     flex-direction: row;
-    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 20px 24px;
+    text-align: left;
   }
 
-  .cta .sub {
-    flex-basis: 100%;
-    text-align: left;
+  .ctaButtons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .ctaNote {
+    font-size: 16px;
+  }
+
+  .btn.go {
+    padding: 0 28px;
   }
 }
 

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react';
 import { useLang } from '@/lib/lang';
 import { ui } from '@/lib/ui';
-import { formatDate } from '@/lib/text';
+import { formatDate, parseBlocks } from '@/lib/text';
 import { byPersona, searchPersonaSchemes, searchSchemeNames, searchStates } from '@/lib/search';
 import { personas, states, type Persona, type StateInfo } from '@/data/config';
 import type { Scheme } from '@/data/types';
@@ -147,7 +147,9 @@ export function ListView({ state, persona }: { state: StateInfo; persona: Person
       ) : null}
       <div className="listColumn">
         <div className="listTop">
-          <BackLink href={`/${state.slug}`}>{t(ui.changePersona)}</BackLink>
+          <BackLink href={`/${state.slug}`} outlined>
+            {t(ui.changePersona)}
+          </BackLink>
           <div>
             <h1>
               {tr(state.name, state.nameTa)} &middot; {tr(persona.labelEn, persona.labelTa)}
@@ -169,7 +171,7 @@ export function ListView({ state, persona }: { state: StateInfo; persona: Person
           {shown.length === 0 ? <p className="empty">{t(ui.noResults)}</p> : null}
           <div className="cards">
             {shown.map((s) => (
-              <SchemeCard key={s.id} scheme={s} />
+              <SchemeCard key={s.id} scheme={s} from={`${state.slug}/${persona.slug}`} />
             ))}
           </div>
         </div>
@@ -221,51 +223,134 @@ export function SearchView({ query }: { query: string }) {
   );
 }
 
-function Section({ title, en, ta }: { title: string; en: string; ta: string }) {
-  const { lang } = useLang();
-  const { t } = useLang();
+const ICONS = {
+  who: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21c1.5-4 4.5-6 8-6s6.5 2 8 6',
+  docs: 'M7 3h7l5 5v13H7zM14 3v5h5',
+  how: 'M4 6h16M4 12h16M4 18h10',
+};
+
+/** Picks the Tamil text when Tamil is on and the sheet has it. */
+function useBilingual(en: string, ta: string) {
+  const { lang, t } = useLang();
   const missingTamil = lang === 'ta' && !ta.trim();
+  return { text: lang === 'ta' && ta.trim() ? ta : en, pending: missingTamil ? <p className="pending">{t(ui.tamilPending)}</p> : null };
+}
+
+function Section({ title, icon, en, ta, kind = 'text' }: { title: string; icon: keyof typeof ICONS; en: string; ta: string; kind?: 'text' | 'checklist' | 'steps' }) {
+  const { text, pending } = useBilingual(en, ta);
+  const blocks = parseBlocks(text);
   return (
-    <section className="sec">
-      <h2>{title}</h2>
-      <RichText text={lang === 'ta' && ta.trim() ? ta : en} />
-      {missingTamil ? <p className="pending">{t(ui.tamilPending)}</p> : null}
+    <section className={`sec sec-${kind}`}>
+      <h2>
+        <span className="ic" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d={ICONS[icon]} />
+          </svg>
+        </span>
+        {title}
+      </h2>
+      {kind === 'text'
+        ? <RichText text={text} />
+        : blocks.map((block, i) => {
+            if (block.type === 'p') return <p key={i}>{block.text}</p>;
+            // Documents become a checklist; how-to-apply steps become numbered cards.
+            return kind === 'checklist' ? (
+              <ul key={i} className="checklist">
+                {block.items.map((item, j) => (
+                  <li key={j}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M5 12l5 5 9-10" />
+                    </svg>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ol key={i} className="steps">
+                {block.items.map((item, j) => (
+                  <li key={j}>
+                    <span className="num" aria-hidden="true">
+                      {j + 1}
+                    </span>
+                    <p>{item}</p>
+                  </li>
+                ))}
+              </ol>
+            );
+          })}
+      {pending}
     </section>
   );
 }
 
-/* Screen 4: full details, with the link to the official government website */
+/** "Back to Tamil Nadu · Woman" when the page was opened from a scheme list, else a plain Back. */
+function DetailBack() {
+  const { t, tr } = useLang();
+  const [from, setFrom] = useState<{ href: string; label: string } | null>(null);
+  useEffect(() => {
+    const [st, pe] = (new URLSearchParams(window.location.search).get('from') ?? '').split('/');
+    const state = states.find((s) => s.slug === st);
+    const persona = personas.find((p) => p.slug === pe);
+    if (state && persona) setFrom({ href: `/${state.slug}/${persona.slug}`, label: `${tr(state.name, state.nameTa)} · ${tr(persona.labelEn, persona.labelTa)}` });
+  }, [tr]);
+  return from ? <BackLink href={from.href}>{t(ui.backTo).replace('{place}', from.label)}</BackLink> : <BackButton />;
+}
+
+/* Screen 4: full details, with the link to the official government website at the bottom. No images. */
 export function DetailView({ scheme }: { scheme: Scheme }) {
   const { t, tr } = useLang();
+  const benefit = useBilingual(scheme.benefitEn, scheme.benefitTa);
   const showSecondary = scheme.applyLink.trim() !== '' && scheme.applyLink !== scheme.officialLink;
+  let site = '';
+  try {
+    site = new URL(scheme.officialLink).hostname.replace(/^www\./, '');
+  } catch {
+    /* keep the button without the site name */
+  }
   return (
     <div className="page detail">
-      <BackButton />
-      <span className="tags">
-        <LevelTag scheme={scheme} />
-        <PlaceTag scheme={scheme} />
-      </span>
-      <h1>{tr(scheme.shortName, scheme.nameTa)}</h1>
-      <p className="sub">
-        {t(ui.department)}: {scheme.department}
-      </p>
-      <Section title={t(ui.whatYouGet)} en={scheme.benefitEn} ta={scheme.benefitTa} />
-      <Section title={t(ui.whoIsEligible)} en={scheme.eligibilityEn} ta={scheme.eligibilityTa} />
-      <Section title={t(ui.documentsRequired)} en={scheme.documentsEn} ta={scheme.documentsTa} />
-      <Section title={t(ui.howToApply)} en={scheme.howToApplyEn} ta={scheme.howToApplyTa} />
-      <p className="sub">
-        {t(ui.lastVerified)}: {formatDate(scheme.lastVerified)}
-      </p>
+      <DetailBack />
+      <div className="detailHead">
+        <span className="tags">
+          <LevelTag scheme={scheme} />
+          <PlaceTag scheme={scheme} />
+        </span>
+        <h1>{tr(scheme.shortName, scheme.nameTa)}</h1>
+        <p className="sub">
+          {t(ui.department)}: {scheme.department}
+        </p>
+      </div>
+      <section className="getBox">
+        <h2>{t(ui.whatYouGet)}</h2>
+        <RichText text={benefit.text} />
+        {benefit.pending}
+      </section>
+      <div className="detailPair">
+        <Section title={t(ui.whoIsEligible)} icon="who" en={scheme.eligibilityEn} ta={scheme.eligibilityTa} />
+        <Section title={t(ui.documentsRequired)} icon="docs" en={scheme.documentsEn} ta={scheme.documentsTa} kind="checklist" />
+      </div>
+      <Section title={t(ui.howToApply)} icon="how" en={scheme.howToApplyEn} ta={scheme.howToApplyTa} kind="steps" />
       <div className="cta">
-        <a className="btn" href={scheme.officialLink} target="_blank" rel="noopener noreferrer">
-          {t(ui.officialButton)}
-        </a>
-        {showSecondary ? (
-          <a className="btn alt" href={scheme.applyLink} target="_blank" rel="noopener noreferrer">
-            {t(ui.applyButton)}
+        <div className="ctaText">
+          <p className="ctaNote">{t(ui.confirmNote)}</p>
+          <p className="sub">
+            {t(ui.lastVerified)}: {formatDate(scheme.lastVerified)}
+            {site ? ` · ${site}` : ''}
+          </p>
+        </div>
+        <div className="ctaButtons">
+          <a className="btn go" href={scheme.officialLink} target="_blank" rel="noopener noreferrer">
+            <span>{t(ui.officialButton)}</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" />
+            </svg>
           </a>
-        ) : null}
-        <p className="sub center">{t(ui.confirmNote)}</p>
+          {showSecondary ? (
+            <a className="btn alt" href={scheme.applyLink} target="_blank" rel="noopener noreferrer">
+              {t(ui.applyButton)}
+            </a>
+          ) : null}
+        </div>
       </div>
     </div>
   );
